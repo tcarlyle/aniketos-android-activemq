@@ -2,8 +2,12 @@ package org.example.mqtt;
 
 import java.net.URISyntaxException;
 
+import org.fusesource.hawtbuf.Buffer;
+import org.fusesource.hawtbuf.UTF8Buffer;
 import org.fusesource.mqtt.client.Callback;
+import org.fusesource.mqtt.client.CallbackConnection;
 import org.fusesource.mqtt.client.FutureConnection;
+import org.fusesource.mqtt.client.Listener;
 import org.fusesource.mqtt.client.MQTT;
 import org.fusesource.mqtt.client.Message;
 import org.fusesource.mqtt.client.QoS;
@@ -47,14 +51,16 @@ public class MQTTActivity extends Activity implements OnClickListener{
 	
 	MQTT mqtt = null;
 	
-	FutureConnection connection = null;
+	CallbackConnection  connection = null;
+	
+	private static boolean activityVisible;
 	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        
+        activityVisible = true;
         setupView();
     }
     
@@ -62,9 +68,44 @@ public class MQTTActivity extends Activity implements OnClickListener{
     public void onPause()
     {
     	super.onPause();
+    	activityVisible = false;
     	
     	disconnect();
     }
+    
+    @Override
+    public void onResume()
+    {
+    	super.onResume();
+    	activityVisible = true;
+    	
+    }
+    
+    
+    public void goToConnectedMode(){
+		addressET.setEnabled(false);
+		userNameET.setEnabled(false);
+		passwordET.setEnabled(false);
+		destinationET.setEnabled(false);
+		
+		connectButton.setEnabled(false);
+		sendButton.setEnabled(true);
+		disconnectButton.setEnabled(true);
+    }
+    
+    public void goToDisconnectedMode(){
+    	
+		addressET.setEnabled(true);
+		userNameET.setEnabled(true);
+		passwordET.setEnabled(true);
+		destinationET.setEnabled(true);
+    	
+		connectButton.setEnabled(true);
+    	sendButton.setEnabled(false);
+    	disconnectButton.setEnabled(false);
+    }
+
+    
     
     public void setupView()
     {
@@ -72,10 +113,14 @@ public class MQTTActivity extends Activity implements OnClickListener{
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     	
     	addressET = (EditText)findViewById(R.id.addressEditText);
-    	addressET.setHint("tcp://192.168.1.15:1883");
+    	//addressET.setHint("tcp://83.212.116.137:1883");
+    	addressET.setText("tcp://83.212.116.137:1883", android.widget.TextView.BufferType.EDITABLE);
     	userNameET = (EditText)findViewById(R.id.userNameEditText);
+    	userNameET.setText("topicadmin", android.widget.TextView.BufferType.EDITABLE);
     	passwordET = (EditText)findViewById(R.id.passwordEditText);
+    	passwordET.setText("xvAFhQtg", android.widget.TextView.BufferType.EDITABLE);
     	destinationET = (EditText)findViewById(R.id.destinationEditText);
+    	destinationET.setText("TrustworthinessComponent", android.widget.TextView.BufferType.EDITABLE);
     	messageET = (EditText)findViewById(R.id.messageEditText);
     	receiveET = (EditText)findViewById(R.id.receiveEditText);
     	
@@ -85,16 +130,19 @@ public class MQTTActivity extends Activity implements OnClickListener{
     	disconnectButton = (Button)findViewById(R.id.disconnectButton);
     	disconnectButton.setOnClickListener(this);
     	
+    	
     	sendButton = (Button)findViewById(R.id.sendButton);
     	sendButton.setOnClickListener(this);
+    	sendButton.setEnabled(false);
     }
 
 	public void onClick(View v) {
 		if(v == connectButton)
-		{
+		{	
 			sAddress = addressET.getText().toString().trim();
 			sUserName = userNameET.getText().toString().trim();
 			sPassword = passwordET.getText().toString().trim();
+			sDestination = destinationET.getText().toString().trim();
 			
 			if(sAddress.equals(""))
 			{
@@ -113,18 +161,10 @@ public class MQTTActivity extends Activity implements OnClickListener{
 		
 		if(v == sendButton)
 		{
-			sDestination = destinationET.getText().toString().trim();
-			sMessage = messageET.getText().toString().trim();
 			
-			// allow empty messages
-			if(sDestination.equals(""))
-			{
-				toast("Destination must be provided");
-			}
-			else
-			{
-				send();
-			}	
+			sMessage = messageET.getText().toString().trim();
+			send();
+
 		}
 	}
 	
@@ -151,7 +191,7 @@ public class MQTTActivity extends Activity implements OnClickListener{
 	private void connect()
 	{
 		mqtt = new MQTT();
-		mqtt.setClientId("android-mqtt-example");
+		
 
 		try
 		{
@@ -165,6 +205,7 @@ public class MQTTActivity extends Activity implements OnClickListener{
 		
 		if(sUserName != null && !sUserName.equals(""))
 		{
+			mqtt.setClientId(sUserName);
 			mqtt.setUserName(sUserName);
 			Log.d(TAG, "UserName set: [" + sUserName + "]");
 		}
@@ -175,14 +216,20 @@ public class MQTTActivity extends Activity implements OnClickListener{
 			Log.d(TAG, "Password set: [" + sPassword + "]");
 		}
 		
-		connection = mqtt.futureConnection();
+		connection = mqtt.callbackConnection();
 		progressDialog = ProgressDialog.show(this, "", 
                 "Connecting...", true);
-		connection.connect().then(onui(new Callback<Void>(){
+		connection.connect(onui(new Callback<Void>(){
 			public void onSuccess(Void value) {
-				connectButton.setEnabled(false);
+				//connectButton.setEnabled(false);
+				connection.listener(new MessageListener());
 				progressDialog.dismiss();
-				toast("Connected");
+				//toast("Connected");
+				Log.d(TAG, "Connected ");
+				// now trying to connect
+				Topic[] topics = {new Topic(UTF8Buffer.utf8(sDestination), QoS.AT_LEAST_ONCE) };
+				connection.subscribe(topics,onui (new OnsubscribeCallback()));
+				
 			}
 			public void onFailure(Throwable e) {
 				toast("Problem connecting to host");
@@ -192,18 +239,28 @@ public class MQTTActivity extends Activity implements OnClickListener{
 		}));
 
 	}
+	private void toast(String message)
+	{
+		Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+	}
+	
 	
 	private void disconnect()
 	{
-		connectButton.setEnabled(true);
+		//connectButton.setEnabled(true);
 		try
 		{
-			if(connection != null && connection.isConnected())
+			if(connection != null )
 			{
-				connection.disconnect().then(onui(new Callback<Void>(){
+				
+				connection.unsubscribe(new UTF8Buffer[]{UTF8Buffer.utf8(sDestination)}, onui(new UnsubscribeCallback()));
+				connection.disconnect(onui(new Callback<Void>(){
 					public void onSuccess(Void value) {
-						connectButton.setEnabled(true);
-						toast("Disconnected");
+						//connectButton.setEnabled(true);
+						goToDisconnectedMode();
+						if(activityVisible)
+								toast("Disconnected");
+						connection = null;
 					}
 					public void onFailure(Throwable e) {
 						toast("Problem disconnecting");
@@ -211,10 +268,7 @@ public class MQTTActivity extends Activity implements OnClickListener{
 					}
 				}));
 			}
-			else
-			{
-				toast("Not Connected");
-			}
+
 		}
 		catch(Exception e)
 		{
@@ -226,56 +280,108 @@ public class MQTTActivity extends Activity implements OnClickListener{
 	{
 		if(connection != null)
 		{
-			// automatically connect if no longer connected
-			if(!connection.isConnected())
-			{
-				connect();
-			}
-			
-			Topic[] topics = {new Topic(sDestination, QoS.AT_LEAST_ONCE)};
-			connection.subscribe(topics).then(onui(new Callback<byte[]>() {
-				public void onSuccess(byte[] subscription) {
-					
-					Log.d(TAG, "Destination: " + sDestination);
-					Log.d(TAG, "Message: " + sMessage);
-					
 					// publish message
-					connection.publish(sDestination, sMessage.getBytes(), QoS.AT_LEAST_ONCE, false);
-					destinationET.setText("");
-					messageET.setText("");
-					toast("Message sent");
-					
-					// receive message
-					connection.receive().then(onui(new Callback<Message>() {
-						public void onSuccess(Message message) {
-							String receivedMesageTopic = message.getTopic();
-							byte[] payload = message.getPayload();
-							String messagePayLoad = new String(payload);
-							message.ack();
-							connection.unsubscribe(new String[]{sDestination});
-							receiveET.setText(receivedMesageTopic + ":" + messagePayLoad);
-						}
-						
-						public void onFailure(Throwable e) {
-							Log.e(TAG, "Exception receiving message: " + e);
-						}
-					}));
-					
-				}
-				
-				public void onFailure(Throwable e) {
-					Log.e(TAG, "Exception sending message: " + e);
-				}
-			}));
+					connection.publish(sDestination, sMessage.getBytes(), QoS.AT_LEAST_ONCE, false, onui(new Callback<Void>() {
+			            public void onSuccess(Void v) {
+			                // the pubish operation completed successfully.
+							//destinationET.setText("");
+							messageET.setText("");
+							toast("Message sent");
+							Log.d(TAG, "sending done");
+			              }
+			              public void onFailure(Throwable value) {
+			            	  toast("Message failed");
+			              }
+			          }));
+	
 		}
-		else
-		{
-			toast("No connection has been made, please create the connection");
-		}
+					
 	}
 	
-	private void toast(String message)
-	{
-		Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+	
+	// subscribed callback
+	private class OnsubscribeCallback  implements Callback <byte[]> {
+		public void onSuccess(byte[] subscription) {
+			
+			Log.d(TAG, "Destination: " + sDestination);
+			goToConnectedMode();
+			toast("Connected and Subscribed");
+		}	
+			
+				
+		public void onFailure(Throwable e) {
+			connection.suspend();// perhaps change for disconnect
+			//connectButton.setEnabled(true);
+			Log.e(TAG, "Exception when subscribing: " + e);
+			toast("Subscription failed");
+		}
+
 	}
+	
+	// subscribed callback
+	private class UnsubscribeCallback  implements Callback <Void> {
+		public void onSuccess(Void subscription) {
+			
+			Log.d(TAG, "Unsubscription worked");
+
+		}	
+			
+				
+		public void onFailure(Throwable e) {
+			toast("UnSubscription failed");
+		}
+
+	}
+	
+	// listener
+	
+	private class MessageListener implements Listener {
+
+	    public void onDisconnected() {
+	    	Log.d(TAG, "got disconnected");
+	    	//connectButton.setEnabled(true);
+	    }
+	    public void onConnected() {
+	    }
+
+	    public void onPublish(UTF8Buffer topic, Buffer payload, Runnable ack) {
+	    	Log.d(TAG, "on publish called");
+	        // You can now process a received message from a topic
+			String fullPayLoad = new String(payload.data); // I did not find documentation on this, 
+			// but the payload seems to in fact consists of 0x32 0xlen (maybe more than a byte) 0x(topic) 0x(message number - in 2 bytes) 0x(message)   
+			String receivedMesageTopic =  topic.toString();
+            String[] fullPayLoadParts = fullPayLoad.split(receivedMesageTopic);// TODO: I should probably check if there are characters that needs to be scaped
+                        
+            if(fullPayLoadParts.length == 2){
+                String messagePayLoad = fullPayLoadParts[1].substring(2);
+    			runOnUiThread(new updateMsgClass(messagePayLoad));
+            }
+			
+	        // Once process execute the ack runnable.
+	        ack.run();
+	    }
+	    public void onFailure(Throwable value) {
+			connection.suspend();// perhaps change for disconnect
+			//connectButton.setEnabled(true);
+			Log.d(TAG, "On failure in the listener...");
+	    }
+
+	
+	}
+	
+	private class updateMsgClass implements Runnable {
+		
+		String mPayLoad;
+		
+		public updateMsgClass (String mPayLoad){
+			this.mPayLoad = mPayLoad;
+		}
+		
+		public void run() {
+			receiveET.setText(mPayLoad);
+		}
+		
+	}
+	
+
 }
