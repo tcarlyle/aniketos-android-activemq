@@ -1,6 +1,7 @@
 package org.example.mqtt;
 
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 
 import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.UTF8Buffer;
@@ -12,38 +13,46 @@ import org.fusesource.mqtt.client.MQTT;
 import org.fusesource.mqtt.client.Message;
 import org.fusesource.mqtt.client.QoS;
 import org.fusesource.mqtt.client.Topic;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import org.example.mqtt.R;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Toast;
 
 public class MQTTActivity extends Activity implements OnClickListener{
 	
+	protected NotificationData notificationData;
+	
 	private final String TAG = "MQTTClient";
 	
-	EditText addressET = null;
 	EditText destinationET = null;
 	EditText messageET = null;
-	EditText receiveET = null;
+	//EditText receiveET = null;
 	EditText userNameET = null;
 	EditText passwordET = null;
-	
+	ListView listview =  null;
+	ArrayAdapter<String> listAdapter = null; 
+	 
 	Button connectButton = null;
 	Button disconnectButton = null;
 	Button sendButton = null;
 	
 	private ProgressDialog progressDialog = null;
 	
-	String sAddress = null;
+	static String sAddress = "tcp://83.212.116.137:1883";
 	String sUserName = null;
 	String sPassword = null;
 	String sDestination = null;
@@ -60,6 +69,7 @@ public class MQTTActivity extends Activity implements OnClickListener{
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        notificationData = new NotificationData(this);
         activityVisible = true;
         setupView();
     }
@@ -83,7 +93,6 @@ public class MQTTActivity extends Activity implements OnClickListener{
     
     
     public void goToConnectedMode(){
-		addressET.setEnabled(false);
 		userNameET.setEnabled(false);
 		passwordET.setEnabled(false);
 		destinationET.setEnabled(false);
@@ -95,7 +104,6 @@ public class MQTTActivity extends Activity implements OnClickListener{
     
     public void goToDisconnectedMode(){
     	
-		addressET.setEnabled(true);
 		userNameET.setEnabled(true);
 		passwordET.setEnabled(true);
 		destinationET.setEnabled(true);
@@ -112,9 +120,6 @@ public class MQTTActivity extends Activity implements OnClickListener{
     	// lock the screen in portrait mode
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     	
-    	addressET = (EditText)findViewById(R.id.addressEditText);
-    	//addressET.setHint("tcp://83.212.116.137:1883");
-    	addressET.setText("tcp://83.212.116.137:1883", android.widget.TextView.BufferType.EDITABLE);
     	userNameET = (EditText)findViewById(R.id.userNameEditText);
     	userNameET.setText("topicadmin", android.widget.TextView.BufferType.EDITABLE);
     	passwordET = (EditText)findViewById(R.id.passwordEditText);
@@ -122,7 +127,16 @@ public class MQTTActivity extends Activity implements OnClickListener{
     	destinationET = (EditText)findViewById(R.id.destinationEditText);
     	destinationET.setText("TrustworthinessComponent", android.widget.TextView.BufferType.EDITABLE);
     	messageET = (EditText)findViewById(R.id.messageEditText);
-    	receiveET = (EditText)findViewById(R.id.receiveEditText);
+    	//receiveET = (EditText)findViewById(R.id.receiveEditText);
+    	listview = (ListView) findViewById(R.id.receiveItemListView);
+    	
+    	String[] values = new String[] { "empty"};
+    	final ArrayList<String> list = new ArrayList<String>();
+    	for (int i = 0; i < values.length; ++i) {
+	      list.add(values[i]);
+	    }
+    	listAdapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, list);
+    	listview.setAdapter(listAdapter);
     	
     	connectButton = (Button)findViewById(R.id.connectButton);
     	connectButton.setOnClickListener(this);
@@ -139,7 +153,6 @@ public class MQTTActivity extends Activity implements OnClickListener{
 	public void onClick(View v) {
 		if(v == connectButton)
 		{	
-			sAddress = addressET.getText().toString().trim();
 			sUserName = userNameET.getText().toString().trim();
 			sPassword = passwordET.getText().toString().trim();
 			sDestination = destinationET.getText().toString().trim();
@@ -191,7 +204,7 @@ public class MQTTActivity extends Activity implements OnClickListener{
 	private void connect()
 	{
 		mqtt = new MQTT();
-		
+		mqtt.setKeepAlive((short)2);
 
 		try
 		{
@@ -216,22 +229,30 @@ public class MQTTActivity extends Activity implements OnClickListener{
 			Log.d(TAG, "Password set: [" + sPassword + "]");
 		}
 		
+		mqtt.setCleanSession(false);
 		connection = mqtt.callbackConnection();
 		progressDialog = ProgressDialog.show(this, "", 
                 "Connecting...", true);
 		connection.connect(onui(new Callback<Void>(){
 			public void onSuccess(Void value) {
 				//connectButton.setEnabled(false);
+				Log.d(TAG, "on success connection");
 				connection.listener(new MessageListener());
 				progressDialog.dismiss();
 				//toast("Connected");
 				Log.d(TAG, "Connected ");
+				
+				
+				// we add "?consumer.retroactive=true" to the topic to specify that the connection is retroactive
+				// as per http://activemq.apache.org/retroactive-consumer.html
+				Topic[] topics = {new Topic(UTF8Buffer.utf8(sDestination), QoS.EXACTLY_ONCE) };
+				
 				// now trying to connect
-				Topic[] topics = {new Topic(UTF8Buffer.utf8(sDestination), QoS.AT_LEAST_ONCE) };
 				connection.subscribe(topics,onui (new OnsubscribeCallback()));
 				
 			}
 			public void onFailure(Throwable e) {
+				Log.d(TAG, "on failure connection ");
 				toast("Problem connecting to host");
 				Log.e(TAG, "Exception connecting to " + sAddress + " - " + e);
 				progressDialog.dismiss();
@@ -281,7 +302,7 @@ public class MQTTActivity extends Activity implements OnClickListener{
 		if(connection != null)
 		{
 					// publish message
-					connection.publish(sDestination, sMessage.getBytes(), QoS.AT_LEAST_ONCE, false, onui(new Callback<Void>() {
+					connection.publish(sDestination, sMessage.getBytes(), QoS.EXACTLY_ONCE, true, onui(new Callback<Void>() {
 			            public void onSuccess(Void v) {
 			                // the pubish operation completed successfully.
 							//destinationET.setText("");
@@ -333,6 +354,9 @@ public class MQTTActivity extends Activity implements OnClickListener{
 
 	}
 	
+	
+	
+	
 	// listener
 	
 	private class MessageListener implements Listener {
@@ -342,6 +366,7 @@ public class MQTTActivity extends Activity implements OnClickListener{
 	    	//connectButton.setEnabled(true);
 	    }
 	    public void onConnected() {
+	    	Log.d(TAG, "got connected on message listener");
 	    }
 
 	    public void onPublish(UTF8Buffer topic, Buffer payload, Runnable ack) {
@@ -354,6 +379,7 @@ public class MQTTActivity extends Activity implements OnClickListener{
                         
             if(fullPayLoadParts.length == 2){
                 String messagePayLoad = fullPayLoadParts[1].substring(2);
+                this.insertMessage(messagePayLoad);
     			runOnUiThread(new updateMsgClass(messagePayLoad));
             }
 			
@@ -366,6 +392,23 @@ public class MQTTActivity extends Activity implements OnClickListener{
 			Log.d(TAG, "On failure in the listener...");
 	    }
 
+	    // parse the json message and instert it on the db
+	    private void insertMessage(String messagePayLoad){
+	    	try {
+				JSONObject jObject = new JSONObject(messagePayLoad);
+				
+				
+				notificationData.insert(jObject.getString("serviceId"), jObject.getString("alertType")
+			,jObject.getString("description"), jObject.getString("serverTime"), jObject.getString("value"), jObject.getString("threatId"),
+			jObject.getInt("threshold"));
+				
+			} catch (JSONException e) {
+				Log.d(TAG, "Failure parsing json message + " + messagePayLoad);
+				e.printStackTrace();
+			}
+	    	
+	    	
+	    }
 	
 	}
 	
@@ -378,7 +421,8 @@ public class MQTTActivity extends Activity implements OnClickListener{
 		}
 		
 		public void run() {
-			receiveET.setText(mPayLoad);
+			//receiveET.setText(mPayLoad);
+			listAdapter.add(mPayLoad);
 		}
 		
 	}
