@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+        <LinearLayout
+            android:id="@+id/linearLayout1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" android:orientation="vertical">
+
+
+
+            <LinearLayout
+                android:id="@+id/linearLayout5"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" >
+
+                <TextView
+                    android:id="@+id/textView6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Destination:"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+
+
+	            <EditText
+	                android:id="@+id/destinationEditText"
+	                android:layout_width="match_parent"
+	                android:layout_height="wrap_content"
+	                android:layout_weight="1" />
+	            
+	             </LinearLayout>
+	
+             <LinearLayout
+                android:id="@+id/linearLayout9"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" >
+            
+	            <TextView
+	                android:id="@+id/textView4"
+	                android:layout_width="wrap_content"
+	                android:layout_height="wrap_content"
+	                android:layout_weight="1"
+	                android:text="Name:"
+	                android:textAppearance="?android:attr/textAppearanceMedium" />
+	
+	            <EditText
+	                android:id="@+id/nameEditText"
+	                android:layout_width="252dp"
+	                android:layout_height="wrap_content" />
+	
+	             </LinearLayout>
+	            
+	            <Button
+	                android:id="@+id/addSubscriptionButton"
+	                android:layout_width="fill_parent"
+	                android:layout_height="wrap_content"
+	                android:text="Add" />
+            
+          
+
+            <TextView
+                android:id="@+id/textView5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="List:"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <ListView
+                android:id="@+id/subscriptionsItemListView"
+                android:layout_width="wrap_content"
+                android:layout_height="192dp" />
+
+        </LinearLayout>
+
+
+</LinearLayout>

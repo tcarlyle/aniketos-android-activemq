@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Android MQTT Test Client</string>
+    <string name="connect_item">connect</string>
+    <string name="config_item">config</string>
 </resources>
