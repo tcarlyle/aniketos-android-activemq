@@ -1,4 +1,4 @@
-package org.example.mqtt;
+package org.example.mqtt.data;
 
 import android.app.Activity;
 import android.content.ContentValues;
@@ -53,12 +53,15 @@ public class NotificationData extends SQLiteOpenHelper {
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+			Log.w(TAG, "Upgrading database from version "
+		        + oldVersion + " to " + newVersion
+		        + ", which will destroy all old data");
 		  db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
 		  onCreate(db);
 
 	}
 	
-
+/*
 	// TODO: possibly make it assynchronous
 	// inserts notification on the db
 	public void insert(String service_id, String alert_type, String description,
@@ -118,7 +121,7 @@ public class NotificationData extends SQLiteOpenHelper {
 
 		  return cursor;
 		}
-	
+	*/
 		public long count() {
 		    SQLiteDatabase db = getReadableDatabase();
 		    return DatabaseUtils.queryNumEntries(db, TABLE_NAME);

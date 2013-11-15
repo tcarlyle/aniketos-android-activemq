@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical" >
@@ -9,42 +9,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" android:orientation="vertical">
 
-
-
-            <LinearLayout
-                android:id="@+id/linearLayout2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal" >
-
-                <Button
-                    android:id="@+id/connectButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Connect" />
-
-                <Button
-                    android:id="@+id/disconnectButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Disconnect" android:layout_weight="1"/>
-
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/textView3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Destination:"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
-
-            <EditText
-                android:id="@+id/destinationEditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
 
  
             <TextView
@@ -63,4 +27,4 @@
         </LinearLayout>
 
 
-</LinearLayout>
+</RelativeLayout>

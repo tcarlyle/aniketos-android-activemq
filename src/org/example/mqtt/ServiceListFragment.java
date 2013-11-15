@@ -10,18 +10,21 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-public class ConfigActivity extends Activity {
+public class ServiceListFragment extends Fragment {
 
 	private final String TAG = "ConfigActivityClient";
 	
@@ -35,32 +38,17 @@ public class ConfigActivity extends Activity {
 	
 	
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu){        
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.config_menu, menu);
-        return true;
-    }
-    
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item){
-        switch(item.getItemId()){
-        case R.id.connect:
-        	Intent launchNewIntent = new Intent(ConfigActivity.this,MQTTActivity.class);
-        	startActivityForResult(launchNewIntent, 0);
-            return true;            
-        }
-        return false;
+   @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+            Bundle savedInstanceState) {
+ 
+        View rootView = inflater.inflate(R.layout.service_list, container, false);
+        setupView(rootView);
+        return rootView;
     }
 	
 	
-    /** Called when the activity is first created. */
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.config);
-        setupView();
-    }
+
     
     @Override
     public void onPause()
@@ -80,20 +68,20 @@ public class ConfigActivity extends Activity {
 	
 	
 	
-    public void setupView()
+    public void setupView(View rootView)
     {
-    	// lock the screen in portrait mode
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+    	Activity parent = getActivity();
     	
-    	destinationET = (EditText)findViewById(R.id.destinationEditText);
+    	destinationET = (EditText) rootView.findViewById(R.id.destinationEditText);
     	destinationET.setText("pub.http://www.eclipse.org/paho/.ThreatLevelChange.Decreasing reputation", android.widget.TextView.BufferType.EDITABLE);
     	
-    	nameET = (EditText)findViewById(R.id.nameEditText);
+    	nameET = (EditText) rootView.findViewById(R.id.nameEditText);
     	
-    	listview = (ListView) findViewById(R.id.subscriptionsItemListView);
+    	listview = (ListView) rootView.findViewById(R.id.subscriptionsItemListView);
     	
     	// populating adapter with list of stored subscriptions
-    	SharedPreferences keyValues = getSharedPreferences(MqttApplication.sharedPrefName, Context.MODE_PRIVATE);
+    	SharedPreferences keyValues = parent.getSharedPreferences(MqttApplication.sharedPrefName, Context.MODE_PRIVATE);
     	Map<String, String> initialSubs = (Map<String, String>) keyValues.getAll();
    
     	final ArrayList<String> list = new ArrayList<String>();
@@ -101,12 +89,12 @@ public class ConfigActivity extends Activity {
     		list.add(entry.getValue());
     		Log.d(TAG, "Added subscription" + entry.getValue());
     	}
-    	listAdapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, list);
+    	listAdapter = new ArrayAdapter<String>(parent.getBaseContext(),android.R.layout.simple_list_item_1, list);
     	listview.setAdapter(listAdapter);
     	
     	
     	
-    	addButton = (Button)findViewById(R.id.addSubscriptionButton);
+    	addButton = (Button) rootView.findViewById(R.id.addSubscriptionButton);
     	addButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
             	
@@ -115,7 +103,7 @@ public class ConfigActivity extends Activity {
             	String name = nameET.getText().toString().trim();
             	
             	if(null != dest && null != name && !(name.isEmpty()) && !(dest.isEmpty())){
-                	SharedPreferences keyValues = getSharedPreferences(MqttApplication.sharedPrefName, Context.MODE_PRIVATE);
+                	SharedPreferences keyValues = getActivity().getSharedPreferences(MqttApplication.sharedPrefName, Context.MODE_PRIVATE);
                 	if (keyValues.contains(dest)){
                 		toast("you are already subscribed to that destination");
                 	}
@@ -139,6 +127,6 @@ public class ConfigActivity extends Activity {
 
 	private void toast(String message)
 	{
-		Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+		Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
 	}
 }
