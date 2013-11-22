@@ -1,6 +1,11 @@
 package org.example.mqtt;
 
+import java.util.List;
+import java.util.Vector;
+
+import org.example.mqtt.AddServiceDialogFragment.AddServiceDialogFragmentListener;
 import org.example.mqtt.MQTTSubscriberService.IncomingHandler;
+import org.example.mqtt.model.NotifService;
 
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
@@ -17,12 +22,17 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.Button;
 
-public class MainActivity extends FragmentActivity implements TabListener {
+public class MainActivity extends FragmentActivity implements TabListener, AddServiceDialogFragmentListener
+, OnClickListener{
 
 	private final String TAG = "MQTT main activity";
 	
@@ -131,7 +141,13 @@ public class MainActivity extends FragmentActivity implements TabListener {
 		// Initilization
 		viewPager = (ViewPager) findViewById(R.id.pager);
 		actionBar = getActionBar();
-		mAdapter = new TabsPagerAdapter(getSupportFragmentManager());
+		
+		List<Fragment> fragments = new Vector<Fragment>();
+        fragments.add(Fragment.instantiate(this, StatusListFragment.class.getName()));
+        fragments.add(Fragment.instantiate(this, ServicesListFragment.class.getName()));
+        fragments.add(Fragment.instantiate(this, ConfigFragment.class.getName()));
+		
+		mAdapter = new TabsPagerAdapter(getSupportFragmentManager(),fragments);
 
 		viewPager.setAdapter(mAdapter);
 		actionBar.setHomeButtonEnabled(false);
@@ -201,6 +217,35 @@ public class MainActivity extends FragmentActivity implements TabListener {
 	    } catch (RemoteException e) {
 	    	Log.e(TAG, "exception sending message to service - " + e);
 	    }
+	}
+
+
+	// method called when a NotifService has been added by the dialog gragment
+	@Override
+	public void onAddedService(NotifService service) {
+		// TODO: add the service
+		Log.d(TAG, "adding Notification service");
+		ServicesListFragment frag = (ServicesListFragment) mAdapter.findFragmentByPosition(1);
+		if(null != frag){
+			if (frag.addService(service) == false)
+				Log.d(TAG, "failed to add the service on the fragment");
+		}
+		
+	   
+	}
+
+	// onClick to capture the need to call the AddServiceDialog
+	@Override
+	public void onClick(View v) {
+		switch(v.getId()) {
+        case R.id.addServiceButton:
+            // it was the addServiceButton
+            FragmentManager fm =  getSupportFragmentManager();
+            AddServiceDialogFragment frag = new AddServiceDialogFragment();
+            frag.show(fm, AddServiceDialogFragment.class.getName());
+            break;
+		}
+		
 	}
 
 }

@@ -24,9 +24,9 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-public class ServiceListFragment extends Fragment {
+public class ServicePageFragment extends Fragment {
 
-	private final String TAG = "ConfigActivityClient";
+	private final String TAG = "ServicePageFragment";
 	
 	EditText destinationET = null;
 	EditText nameET = null;
@@ -42,7 +42,7 @@ public class ServiceListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
  
-        View rootView = inflater.inflate(R.layout.service_list, container, false);
+        View rootView = inflater.inflate(R.layout.service_page, container, false);
         setupView(rootView);
         return rootView;
     }

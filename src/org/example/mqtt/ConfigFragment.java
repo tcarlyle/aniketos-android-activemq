@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,6 +41,7 @@ public class ConfigFragment extends Fragment implements OnClickListener{
  
         View rootView = inflater.inflate(R.layout.conf, container, false);
         setupView(rootView);
+        Log.d(TAG, "On Create View");
         return rootView;
     }
 	
@@ -55,7 +57,7 @@ public class ConfigFragment extends Fragment implements OnClickListener{
 	    	disconnectButton = (Button) rootView.findViewById(R.id.disconnectButton);
 	    	disconnectButton.setOnClickListener(this);
 	    	
-			MqttApplication appHandler = (MqttApplication) getActivity().getApplication();
+			MqttApplication appHandler = (MqttApplication) parent.getApplication();
 			this.setConnectButtons(appHandler.isConnection());
 	    	
 	    }

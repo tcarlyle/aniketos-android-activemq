@@ -1,37 +1,38 @@
 package org.example.mqtt;
 
+import java.util.List;
+
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
 public class TabsPagerAdapter extends FragmentPagerAdapter {
 
-    public TabsPagerAdapter(FragmentManager fm) {
+	private List<Fragment> fragments;
+	private FragmentManager fm;
+	
+    public TabsPagerAdapter(FragmentManager fm,List<Fragment> fragments) {
         super(fm);
+        this.fm = fm;
+        this.fragments = fragments;
     }
 	
 	@Override
 	public Fragment getItem(int index) {
 
-	       switch (index) {
-	        case 0:
-	            // all mqtt updates
-	            return new StatusListFragment();
-	        case 1:
-	            // service list
-	            return new ServiceListFragment();
-	        case 2:
-	            // test
-	            return new ConfigFragment();
-	        }
-	 
-	        return null;
+	       return  this.fragments.get(index);
 	}
 
 	@Override
 	public int getCount() {
-		// TODO Auto-generated method stub
-		return 3;
+		return this.fragments.size();
+	}
+	
+	// 0 - Status, 1 Service, 2 Config (due to the order in which they have been added)
+	public Fragment findFragmentByPosition(int position) {
+	    return fm.findFragmentByTag(
+	            "android:switcher:" + R.id.pager + ":"
+	                    + this.getItemId(position));
 	}
 
 }

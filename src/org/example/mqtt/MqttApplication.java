@@ -9,6 +9,10 @@ public class MqttApplication extends Application {
 	public static String sharedPrefName = "subscriptionList"; 
 	public static String address = "tcp://83.212.116.137:1883"; // TODO: possibly add an input for this
 	
+	//public static String StatusListFragTag = "status_list_frag_tag";
+	//public static String ServicesListFragTag = "services_list_frag_tag";
+	//public static String ConfigFragTag = "config_frag_tag";
+	
 	public boolean connection = false;
 	
 	
@@ -23,10 +27,12 @@ public class MqttApplication extends Application {
 		this.connection = connection;
 	}
 
-
+	public static final String statusTab = "Status";
+	public static final String servicesTab = "Services";
+	public static final String settingsTab = "Settings" ;
 
 	// Tab titles
-    public static String[] tabs = { "Status", "Services", "Settings" };
+    public static String[] tabs = { statusTab, servicesTab,settingsTab };
 
 	
 }

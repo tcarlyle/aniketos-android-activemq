@@ -11,10 +11,12 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.SimpleCursorAdapter;
+import android.util.Log;
 
 public class StatusListFragment extends ListFragment implements
 		LoaderCallbacks<Cursor> {
 
+	private final String TAG = "StatusListFragment";
 	
 	private SimpleCursorAdapter adapter;
 	@Override
@@ -28,6 +30,7 @@ public class StatusListFragment extends ListFragment implements
 	            null, uiBindFrom, uiBindTo,
 	            CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 	    setListAdapter(adapter);
+	    Log.d(TAG, "On Create");
 	}
 	
 	@Override
