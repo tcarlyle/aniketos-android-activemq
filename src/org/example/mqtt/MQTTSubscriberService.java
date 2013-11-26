@@ -1,6 +1,10 @@
 package org.example.mqtt;
 
 import java.net.URISyntaxException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Map;
 
 
@@ -306,7 +310,7 @@ public class MQTTSubscriberService extends Service {
             		messagePayLoad = fullPayLoadParts[1];
             	else
             		messagePayLoad = fullPayLoadParts[1].substring(2);
-                String val = this.insertMessage(messagePayLoad);
+                String val = this.insertMessage(messagePayLoad,receivedMesageTopic);
                 // TODO: SEND AN UPDATE MESSAGE TO ACTIVITY
             }
 			
@@ -322,25 +326,54 @@ public class MQTTSubscriberService extends Service {
 	    }
 
 	    // parse the json message, instert it on the db and return the value
-	    private String insertMessage(String messagePayLoad){
+	    private String insertMessage(String messagePayLoad, String receivedMesageTopic){
 	    	String value = null;
 	    	try {
 				JSONObject jObject = new JSONObject(messagePayLoad);
 				
-				  ContentValues values = new ContentValues();
-				  values.put(NotificationData.SERVICE_ID, jObject.getString("serviceId"));
-				  values.put(NotificationData.ALERT_TYPE, jObject.getString("alertType"));
-				  values.put(NotificationData.DESCRIPTION, jObject.getString("description"));
-				  values.put(NotificationData.SERVER_TIME, jObject.getString("serverTime"));		  
-				  values.put(NotificationData.VALUE, jObject.getString("value"));
-				  values.put(NotificationData.THREAT_ID, jObject.getString("threatId"));
-				  values.put(NotificationData.THRESHOLD, jObject.getInt("threshold"));
 				
-				Uri instertedUri = getContentResolver().insert(NotificationContentProvider.CONTENT_URI, values);
-				// TODO: handle failure on content provider and on main code  
+				// time convertion test
+				  String timeInString = jObject.getString("serverTime");
+				  try {
+					    SimpleDateFormat format =
+					        new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS z");
+					    Date parsed = format.parse(timeInString);
+					    Calendar c = Calendar.getInstance();
+					    c.setTime(parsed);
+					    // TODO: remove the 3 lines of debuging below
+					    Log.d(TAG, "Date time in millis " + c.getTime().getTime());
+					    String formatted = format.format(c.getTime());
+					    Log.d(TAG, "String date " + formatted);
+					    
+					    
+					    // real inserting
+						  ContentValues values = new ContentValues();
+						  values.put(NotificationData.SERVICE_ID, jObject.getString("serviceId"));
+						  values.put(NotificationData.ALERT_TYPE, jObject.getString("alertType"));
+						  values.put(NotificationData.DESCRIPTION, jObject.getString("description"));
+						  values.put(NotificationData.SERVER_TIME, c.getTime().getTime());		  
+						  values.put(NotificationData.VALUE, jObject.getString("value"));
+						  values.put(NotificationData.THREAT_ID, jObject.getString("threatId"));
+						  values.put(NotificationData.THRESHOLD, jObject.getInt("threshold"));
+						  values.put(NotificationData.SERVICE_FULL_URI, receivedMesageTopic);
+						  
 
+						  
+						
+						Uri instertedUri = getContentResolver().insert(NotificationContentProvider.CONTENT_URI, values);
+						// TODO: handle failure on content provider and on main code  
+
+						
+						value = jObject.getString("value");
+					    
+					    
+					}
+					catch(ParseException pe) {
+					    throw new IllegalArgumentException();
+					}
 				
-				value = jObject.getString("value");
+				
+
 				
 			} catch (JSONException e) {
 				Log.d(TAG, "Failure parsing json message + " + messagePayLoad);

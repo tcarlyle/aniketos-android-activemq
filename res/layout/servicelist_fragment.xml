@@ -3,7 +3,7 @@
          android:orientation="vertical"
          android:layout_width="match_parent"
          android:layout_height="match_parent"
-         android:id="@+id/service_list_fragment">
+         android:id="@+id/servicelist_fragment">
 
       <Button
       android:id="@+id/addServiceButton"

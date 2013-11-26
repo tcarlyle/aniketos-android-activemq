@@ -15,7 +15,7 @@ public class NotificationData extends SQLiteOpenHelper {
 	  private static final String TAG = "NotificationData";
 	
 	  private static final String DATABASE_NAME = "mqtt_notif.db";
-	  private static final int DATABASE_VERSION = 1;
+	  private static final int DATABASE_VERSION = 3;
 
 	  public static final String TABLE_NAME = "notification";
 
@@ -27,8 +27,9 @@ public class NotificationData extends SQLiteOpenHelper {
 	  public static final String VALUE = "value"; // string
 	  public static final String THREAT_ID = "threat_id"; // string
 	  public static final String THRESHOLD = "threshold"; // int
+	  public static final String SERVICE_FULL_URI = "service_uri"; // string
 	
-	  public static final String [] COLUMNS = {_ID,SERVICE_ID,ALERT_TYPE,DESCRIPTION,SERVER_TIME,VALUE,THREAT_ID,THRESHOLD};
+	  public static final String [] COLUMNS = {_ID,SERVICE_ID,ALERT_TYPE,DESCRIPTION,SERVER_TIME,VALUE,THREAT_ID,THRESHOLD,SERVICE_FULL_URI};
 	
 	@Override
 	public void onCreate(SQLiteDatabase db) {
@@ -38,10 +39,11 @@ public class NotificationData extends SQLiteOpenHelper {
 			      + SERVICE_ID + " TEXT NOT NULL, "
 			      + ALERT_TYPE + " TEXT, "
 			       +  DESCRIPTION + " TEXT, "
-					 + SERVER_TIME+ " TEXT, "
+					 + SERVER_TIME+ " BIGINT, "
 					 + VALUE+ " TEXT, "
 					 + THREAT_ID + " TEXT, "
-					 + THRESHOLD + " INTEGER"
+					 + THRESHOLD + " INTEGER,"
+					 + SERVICE_FULL_URI + " TEXT"
 			      + ");";
 		db.execSQL(sql);
 

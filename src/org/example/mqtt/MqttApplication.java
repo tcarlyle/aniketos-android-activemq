@@ -5,6 +5,9 @@ import android.app.Application;
 public class MqttApplication extends Application {
 
 	public static final int STATUS_LIST_LOADER = 0x01;
+	public static final int SERVICE_SPECIFIC_LIST_LOADER = 0x02;
+	public static String SERVICE_NAME_BUNDLE_TAG = "service";
+	public static String SERVICE_URI_BUNDLE_TAG = "uri";
 	
 	public static String sharedPrefName = "subscriptionList"; 
 	public static String address = "tcp://83.212.116.137:1883"; // TODO: possibly add an input for this

@@ -12,6 +12,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
@@ -24,6 +26,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.Toast;
 
 public class ServicesListFragment extends ListFragment  {
@@ -80,10 +83,42 @@ public class ServicesListFragment extends ListFragment  {
 	    	Log.d(TAG, "On CreateView");
 	        return rootView;
 	    }
+	  
+	  @Override
+	  public void onListItemClick(ListView l, View v, int position, long id) {
+	    // do something with the data
+		  NotifService  item = (NotifService) getListAdapter().getItem(position);
+		  Log.d(TAG, "selected service " + item.getServiceURI());
+		//  MainActivity m = (MainActivity) getActivity();
+		//  m.showServiceSpecificNotifications(item.getServiceURI());
+		  
+
+		Fragment newFragment = new ServiceSpecifNotListFragment();
+		Bundle bundle = new Bundle();
+		bundle.putString(MqttApplication.SERVICE_URI_BUNDLE_TAG, item.getServiceURI());
+		newFragment.setArguments(bundle);
+        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
+        transaction.addToBackStack(null);
+        transaction.replace(R.id.servicelist_fragment, newFragment).commit();
+		  
+	  }
 
 		private void toast(String message)
 		{
 			Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
 		}
 
+
+		@Override
+		public void onDestroyView(){
+			super.onDestroyView();
+			Log.d(TAG, "on destroy view");
+		}
+		
+		@Override
+		public void onDestroy(){
+			super.onDestroy();
+			Log.d(TAG, "on destroy");
+		}	
+		
 }

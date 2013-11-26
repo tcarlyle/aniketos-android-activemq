@@ -1,15 +1,20 @@
 package org.example.mqtt;
 
+import java.util.Iterator;
 import java.util.List;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.util.Log;
 
 public class TabsPagerAdapter extends FragmentPagerAdapter {
 
 	private List<Fragment> fragments;
 	private FragmentManager fm;
+	
+	private final String TAG = "TabsPagerAdapter";
+	
 	
     public TabsPagerAdapter(FragmentManager fm,List<Fragment> fragments) {
         super(fm);
@@ -34,5 +39,19 @@ public class TabsPagerAdapter extends FragmentPagerAdapter {
 	            "android:switcher:" + R.id.pager + ":"
 	                    + this.getItemId(position));
 	}
+	
+/*	public Fragment getVisibleFrag(){
+		Iterator<Fragment> iterator = fragments.iterator();
+		while (iterator.hasNext()) {
+			Fragment f = iterator.next();
+			if(f.isVisible()){
+				Log.d(TAG, "fragment found is " + f.getTag() );
+				return f;
+			}
+		}
+		Log.d(TAG, "no visible fragment found");
+		return null;
+	}*/
+
 
 }

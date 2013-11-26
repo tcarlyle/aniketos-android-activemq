@@ -247,5 +247,53 @@ public class MainActivity extends FragmentActivity implements TabListener, AddSe
 		}
 		
 	}
+	
+	// this function can be called by fragments to invoke the creation and
+	// display of a fragment with the service specific notifications
+	public void showServiceSpecificNotifications(String serviceURI){
+		// Create new fragment and transaction
+		Fragment newFragment = Fragment.instantiate(this, ServiceSpecifNotListFragment.class.getName());
+		Bundle bundle = new Bundle();
+		bundle.putString(MqttApplication.SERVICE_URI_BUNDLE_TAG, serviceURI);
+		newFragment.setArguments(bundle);
+		
+		
+		
+		android.support.v4.app.FragmentTransaction fft = getSupportFragmentManager().beginTransaction();
+
+		// Replace whatever is in the fragment_container view with this fragment,
+		// and add the transaction to the back stack
+
+		// test 1
+		//Fragment oldServiceFragment = mAdapter.findFragmentByPosition(1);
+		//fft.replace(oldServiceFragment., newFragment, "specific_service_notif_list");
+
+		// test 2
+		//fft.add(R.id.service_notif_list_fragment, newFragment);
+		//fft.show(newFragment);
+		//fft.addToBackStack(null);
+
+		// Commit the transaction
+		fft.commit();
+		
+
+		Log.d(TAG, "show service finished to be called");
+	}
+	
+	// TODO: review this one
+	// This the important bit to make sure the back button works when you're nesting fragments. Very hacky, all it takes is some Google engineer to change that ViewPager view tag to break this in a future Android update.
+	@Override
+	public void onBackPressed() {
+	    Fragment fragment = (Fragment) getSupportFragmentManager().findFragmentByTag("android:switcher:" + R.id.pager + ":"+viewPager.getCurrentItem());
+	    if (fragment != null) // could be null if not instantiated yet
+	    {
+	        if (fragment.getView() != null) {
+	            // Pop the backstack on the ChildManager if there is any. If not, close this activity as normal.
+	            if (!fragment.getChildFragmentManager().popBackStackImmediate()) {
+	                finish();
+	            }
+	        }
+	    }
+	}
 
 }
