@@ -26,7 +26,7 @@ public class StatusListFragment extends ListFragment implements
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		String[] uiBindFrom = { NotificationData.SERVICE_FULL_URI, NotificationData.ALERT_TYPE, NotificationData.SERVER_TIME, NotificationData.DESCRIPTION, NotificationData.VALUE };
+		String[] uiBindFrom = { NotificationData.SERVICE_ID, NotificationData.ALERT_TYPE, NotificationData.SERVER_TIME, NotificationData.DESCRIPTION, NotificationData.VALUE };
 	    int[] uiBindTo = { R.id.service, R.id.alert, R.id.timestamp, R.id.description, R.id.value }; // from all_status_row_layout.xml
 	    getLoaderManager().initLoader(MqttApplication.STATUS_LIST_LOADER, null, this);
 	    adapter = new NotificationCursorAdapter(

@@ -144,6 +144,11 @@ public class MainActivity extends FragmentActivity implements TabListener, AddSe
 		actionBar = getActionBar();
 		
 		//List<Fragment> 
+		
+		// WATCH OUT! unfortunatelly dealing with fragments on a page adapter is a bit
+		// of a mess and I cant get a single reference to them and therefore must
+		// identified base on the order in which they are added to this vector
+		// therefore do not change this order before checking the code!
 		fragments = new Vector<Fragment>();
         fragments.add(Fragment.instantiate(this, StatusListFragment.class.getName()));
         fragments.add(Fragment.instantiate(this, ServicesListFragment.class.getName()));
@@ -224,9 +229,8 @@ public class MainActivity extends FragmentActivity implements TabListener, AddSe
 
 	// method called when a NotifService has been added by the dialog gragment
 	@Override
-	public void onAddedService(NotifService service) {
-		Log.d(TAG, "adding Notification service");
-		ServicesListFragment frag = (ServicesListFragment) mAdapter.findFragmentByPosition(1);
+	public void notifyAddedService() {
+		ServicesListFragment frag = (ServicesListFragment) mAdapter.findFragmentByPosition(1); // TODO: change this 1 for a static number
 		if(null != frag){
 			frag.notifyServiceListChange();
 		}
@@ -247,6 +251,8 @@ public class MainActivity extends FragmentActivity implements TabListener, AddSe
 		}
 		
 	}
+	
+	
 	
 	// this function can be called by fragments to invoke the creation and
 	// display of a fragment with the service specific notifications
@@ -297,6 +303,7 @@ public class MainActivity extends FragmentActivity implements TabListener, AddSe
 	}
 	
 
+	/*
     public void replaceFragmentToServiveListNot(String serviceURI) {
     	Log.d(TAG, "replace fragment called");
     	fragments.clear();
@@ -310,7 +317,7 @@ public class MainActivity extends FragmentActivity implements TabListener, AddSe
 		fragments.add(Fragment.instantiate(this, ConfigFragment.class.getName()));
 
         mAdapter.notifyDataSetChanged();
-    }
+    }*/
 
 
 }

@@ -24,7 +24,7 @@ import android.widget.TextView.OnEditorActionListener;
 public class AddServiceDialogFragment extends DialogFragment implements OnClickListener{
 
 	EditText servUriEditText;
-	EditText nameEditText; // this is the one that has the done option set on the layout
+	EditText nameEditText; 
 	
 	Button saveButton;
 	Button cancelButton;
@@ -35,7 +35,7 @@ public class AddServiceDialogFragment extends DialogFragment implements OnClickL
 	// interface that the activity must implement in order to get a notification
 	// when the service is added to the shared preferences
     public interface AddServiceDialogFragmentListener {
-        void onAddedService(NotifService service);
+        void notifyAddedService();
     }
 	
 	// pass as in put a serviceList if you want to update it
@@ -67,9 +67,10 @@ public class AddServiceDialogFragment extends DialogFragment implements OnClickL
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.add_service_dialog_frag, container);
-        servUriEditText = (EditText) view.findViewById(R.id.txt_service_uri);
-        servUriEditText.setText("pub.http://www.eclipse.org/paho/.ThreatLevelChange.Decreasing reputation", android.widget.TextView.BufferType.EDITABLE);
+        
+        //servUriEditText.setText("pub.http://www.eclipse.org/paho/.ThreatLevelChange.Decreasing reputation", android.widget.TextView.BufferType.EDITABLE);
         nameEditText = (EditText) view.findViewById(R.id.txt_name);
+        servUriEditText = (EditText) view.findViewById(R.id.txt_service_uri);
         getDialog().setTitle("Add Service");
         
         saveButton = (Button) view.findViewById(R.id.buttonSave);
@@ -104,7 +105,7 @@ public class AddServiceDialogFragment extends DialogFragment implements OnClickL
 	                	toast("Error: service URI already registered");
 	                    break;
 	                case MqttApplication.ADD_SERVICE_OK:
-	                	activityCallback.onAddedService(new NotifService(dest,name));
+	                	activityCallback.notifyAddedService();
 	                    break;
         		}
 

@@ -152,8 +152,8 @@ public class MQTTSubscriberService extends Service {
 
 		    	int i= 0;
 		    	for (Map.Entry<String, String> entry : initialSubs.entrySet()){
-		    		topics[i] = new Topic(UTF8Buffer.utf8(entry.getKey()), QoS.EXACTLY_ONCE);
-		    		Log.d(TAG, "Added topic " + entry.getKey());
+		    		topics[i] = new Topic(UTF8Buffer.utf8("pub." + entry.getKey() + ".>"), QoS.EXACTLY_ONCE);
+		    		Log.d(TAG, "Added topic " + topics[i].toString());
 		    		i++;
 		    	}
 							
@@ -180,6 +180,8 @@ public class MQTTSubscriberService extends Service {
 				
 				
 				// get topics from shared preferences to subscribe
+				// notice that we append a "pub." before the topic URI
+				// and a ".>" after the topic
 				
 		    	SharedPreferences keyValues = getSharedPreferences(MqttApplication.sharedPrefName, Context.MODE_PRIVATE);
 		    	Map<String, String> initialSubs = (Map<String, String>) keyValues.getAll();
@@ -187,7 +189,7 @@ public class MQTTSubscriberService extends Service {
 
 		    	int i= 0;
 		    	for (Map.Entry<String, String> entry : initialSubs.entrySet()){
-		    		topics[i] = new UTF8Buffer(entry.getKey());
+		    		topics[i] = new UTF8Buffer("pub." + entry.getKey() + ".>");
 		    		Log.d(TAG, "Unsubscribed topic" + entry.getKey());
 		    		i++;
 		    	}

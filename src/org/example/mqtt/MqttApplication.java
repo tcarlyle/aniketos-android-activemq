@@ -82,7 +82,19 @@ public class MqttApplication extends Application {
 	}
 
 
-	
+	public boolean deleteService(String serviceName){
+		
+		for(NotifService serv : serviceList) {
+		    if(serv.getServiceName() != null && serv.getServiceName().equals(serviceName)) {
+		    	SharedPreferences keyValues = getSharedPreferences(MqttApplication.sharedPrefName, Context.MODE_PRIVATE);
+		        SharedPreferences.Editor keyValuesEditor = keyValues.edit();
+		        keyValuesEditor.remove(serv.getServiceURI());
+		        keyValuesEditor.commit();
+		        return serviceList.remove(serv);
+		     }
+		}
+		return false;
+	}
 
 
 	public boolean connection = false;
