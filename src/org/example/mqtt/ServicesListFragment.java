@@ -35,16 +35,12 @@ public class ServicesListFragment extends ListFragment  {
 	Button addButton = null;
 	
 	ServiceNotifRowAdapter adapter;
-	ArrayList<NotifService> list = new ArrayList<NotifService>();
+
 	
 	// to be called if one wants to change the dataset
 	// basically to be used by the main activity after the Service Add dialog
-	// inserts a new service on the dataset
-	public boolean addService(NotifService serv){
-		boolean ret = list.add(serv);
-		if(ret)
-			adapter.notifyDataSetChanged();
-		return ret;
+	public void notifyServiceListChange(){
+		adapter.notifyDataSetChanged();
 	}
 	
 	@Override
@@ -52,21 +48,9 @@ public class ServicesListFragment extends ListFragment  {
 		super.onCreate(savedInstanceState);
 		
 		Activity parent = getActivity();
-		
-	   	// populating adapter with list of stored subscriptions
-    	SharedPreferences keyValues = parent.getSharedPreferences(MqttApplication.sharedPrefName, Context.MODE_PRIVATE);
-    	Map<String, String> initialSubs = (Map<String, String>) keyValues.getAll();
-   
-    	
-    	for (Map.Entry<String, String> entry : initialSubs.entrySet()){
-    		list.add(new NotifService(entry.getKey(),entry.getValue()));
-    		Log.d(TAG, "Retrieved subscription" + entry.getValue());
-    	}
-    	
-    	
-    	
+		MqttApplication app = (MqttApplication) parent.getApplication();
 
-    	adapter = new ServiceNotifRowAdapter(getActivity().getApplicationContext(),list);
+    	adapter = new ServiceNotifRowAdapter(getActivity().getApplicationContext(),app.getServiceList());
 	    setListAdapter(adapter);
 	    Log.d(TAG, "On Create");
 	}
@@ -75,7 +59,7 @@ public class ServicesListFragment extends ListFragment  {
 	    public View onCreateView(LayoutInflater inflater, ViewGroup container,
 	            Bundle savedInstanceState) {
 	 
-	        View rootView = inflater.inflate(R.layout.servicelist_fragment, container, false);
+	        View rootView = inflater.inflate(R.layout.serv_list_fragment, container, false);
 
 	       	addButton = (Button) rootView.findViewById(R.id.addServiceButton);
 	       	MainActivity m = (MainActivity) getActivity();
@@ -96,10 +80,17 @@ public class ServicesListFragment extends ListFragment  {
 		Fragment newFragment = new ServiceSpecifNotListFragment();
 		Bundle bundle = new Bundle();
 		bundle.putString(MqttApplication.SERVICE_URI_BUNDLE_TAG, item.getServiceURI());
+		bundle.putString(MqttApplication.SERVICE_NAME_BUNDLE_TAG, item.getServiceName());
 		newFragment.setArguments(bundle);
         FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
         transaction.addToBackStack(null);
         transaction.replace(R.id.servicelist_fragment, newFragment).commit();
+        
+        /*
+         * 		  MainActivity m = (MainActivity) getActivity();
+		  m.replaceFragmentToServiveListNot(item.getServiceURI());
+         * 
+         */
 		  
 	  }
 

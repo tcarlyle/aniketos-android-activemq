@@ -92,17 +92,21 @@ public class AddServiceDialogFragment extends DialogFragment implements OnClickL
         	String name = nameEditText.getText().toString().trim();
         	
         	if(null != dest && null != name && !(name.isEmpty()) && !(dest.isEmpty())){
-            	SharedPreferences keyValues = getActivity().getSharedPreferences(MqttApplication.sharedPrefName, Context.MODE_PRIVATE);
-            	if (keyValues.contains(dest)){
-            		toast("you are already subscribed to that destination");
-            	}
-            	else{
-                	SharedPreferences.Editor keyValuesEditor = keyValues.edit();
-                	keyValuesEditor.putString(dest,name);
-                	keyValuesEditor.commit();
-                	// Call the activity to notify that the service has been added
-                	activityCallback.onAddedService(new NotifService(dest,name));
-            	}	
+        		
+        		Activity parent = getActivity();
+        		MqttApplication app = (MqttApplication) parent.getApplication();
+        		int addServResult = app.addService(name, dest);
+        		switch (addServResult) {
+	                case MqttApplication.ADD_SERVICE_ERR_EXISTING_SERVICE_NAME:  
+	                	toast("Error: service name already registered");
+	                    break;
+	                case MqttApplication.ADD_SERVICE_ERR_EXISTING_SERVICE_URI:  
+	                	toast("Error: service URI already registered");
+	                    break;
+	                case MqttApplication.ADD_SERVICE_OK:
+	                	activityCallback.onAddedService(new NotifService(dest,name));
+	                    break;
+        		}
 
         	}else{
         		toast("sanity check failed");

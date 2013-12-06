@@ -25,6 +25,12 @@
         android:text="Delete">
     </Button>
 </LinearLayout>-->
+
+    <TextView
+        android:id="@+id/serviceName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
     
      <ListView android:id="@id/android:list"
                android:layout_width="match_parent"

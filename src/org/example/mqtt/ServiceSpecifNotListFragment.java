@@ -17,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
 public class ServiceSpecifNotListFragment extends ListFragment implements
 		LoaderCallbacks<Cursor> {
@@ -25,6 +26,8 @@ public class ServiceSpecifNotListFragment extends ListFragment implements
 	Button editServiceButton = null;
 	Button deleteServiceButton = null;
 	String serviceUri;
+	String servName;
+	TextView serviceName = null;
 	
 	private NotificationCursorAdapter adapter;
 	@Override
@@ -54,8 +57,10 @@ public class ServiceSpecifNotListFragment extends ListFragment implements
 	            Bundle savedInstanceState) {
 	 
 	        View rootView = inflater.inflate(R.layout.service_notif_list_fragment, container, false);
-
+	        serviceName = (TextView) rootView.findViewById(R.id.serviceName);
+		    serviceName.setText(servName); // the name is set in the onCreateLoader
 	    	Log.d(TAG, "On CreateView");
+	    	
 	        return rootView;
 	    }
 	
@@ -66,8 +71,10 @@ public class ServiceSpecifNotListFragment extends ListFragment implements
 
 	    Bundle arg = this.getArguments();
 	    serviceUri = arg.getString(MqttApplication.SERVICE_URI_BUNDLE_TAG);
+	    servName = arg.getString(MqttApplication.SERVICE_NAME_BUNDLE_TAG);
 	    // TODO move the serviceURI null check here
 	    Log.d(TAG, "On createLoader with serviceuri = " + serviceUri);
+
 		
 		if(null != serviceUri){
 			String selection = NotificationData.SERVICE_FULL_URI + " = ?";

@@ -3,6 +3,16 @@
     android:layout_width="wrap_content" android:layout_height="wrap_content"
     android:layout_gravity="center" android:orientation="vertical" >
 
+     <TextView
+        android:id="@+id/lbl_Name" android:text="Name:" 
+        android:layout_width="wrap_content" android:layout_height="wrap_content" />
+      
+    <EditText
+        android:id="@+id/txt_name"
+        android:layout_width="match_parent"  android:layout_height="wrap_content" 
+        android:inputType="text"/>
+    
+    
     <TextView
         android:id="@+id/lbl_service_uri" android:text="Service uri:" 
         android:layout_width="wrap_content" android:layout_height="wrap_content" />
@@ -13,14 +23,7 @@
         android:inputType="text"
                />
     
-     <TextView
-        android:id="@+id/lbl_Name" android:text="Name:" 
-        android:layout_width="wrap_content" android:layout_height="wrap_content" />
-      
-    <EditText
-        android:id="@+id/txt_name"
-        android:layout_width="match_parent"  android:layout_height="wrap_content" 
-        android:inputType="text"/>
+
     
     <LinearLayout 
     android:id="@+id/LinearLayout02" 

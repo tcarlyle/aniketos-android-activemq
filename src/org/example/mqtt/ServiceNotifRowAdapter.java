@@ -17,7 +17,7 @@ public class ServiceNotifRowAdapter extends ArrayAdapter<NotifService> {
 	private final List<NotifService> values;
 	  
 	public ServiceNotifRowAdapter(Context context, 	List<NotifService> objects) {
-		super(context,  R.layout.servicelist_fragment, objects);
+		super(context,  R.layout.serv_list_fragment, objects);
 		this.context = context;
 		this.values = objects;
 	}

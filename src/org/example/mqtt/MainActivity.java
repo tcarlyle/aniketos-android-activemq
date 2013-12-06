@@ -49,6 +49,7 @@ public class MainActivity extends FragmentActivity implements TabListener, AddSe
     
     boolean isBound = false;
     
+    List<Fragment> fragments;
     
     // connect == true
     // disconnect == false
@@ -142,7 +143,8 @@ public class MainActivity extends FragmentActivity implements TabListener, AddSe
 		viewPager = (ViewPager) findViewById(R.id.pager);
 		actionBar = getActionBar();
 		
-		List<Fragment> fragments = new Vector<Fragment>();
+		//List<Fragment> 
+		fragments = new Vector<Fragment>();
         fragments.add(Fragment.instantiate(this, StatusListFragment.class.getName()));
         fragments.add(Fragment.instantiate(this, ServicesListFragment.class.getName()));
         fragments.add(Fragment.instantiate(this, ConfigFragment.class.getName()));
@@ -223,12 +225,10 @@ public class MainActivity extends FragmentActivity implements TabListener, AddSe
 	// method called when a NotifService has been added by the dialog gragment
 	@Override
 	public void onAddedService(NotifService service) {
-		// TODO: add the service
 		Log.d(TAG, "adding Notification service");
 		ServicesListFragment frag = (ServicesListFragment) mAdapter.findFragmentByPosition(1);
 		if(null != frag){
-			if (frag.addService(service) == false)
-				Log.d(TAG, "failed to add the service on the fragment");
+			frag.notifyServiceListChange();
 		}
 		
 	   
@@ -295,5 +295,22 @@ public class MainActivity extends FragmentActivity implements TabListener, AddSe
 	        }
 	    }
 	}
+	
+
+    public void replaceFragmentToServiveListNot(String serviceURI) {
+    	Log.d(TAG, "replace fragment called");
+    	fragments.clear();
+    	//fragments.removeAll(fragments);
+        fragments.add(Fragment.instantiate(this, StatusListFragment.class.getName()));
+        Fragment newFragment = new ServiceSpecifNotListFragment();
+        Bundle bundle = new Bundle();
+		bundle.putString(MqttApplication.SERVICE_URI_BUNDLE_TAG, serviceURI);
+		newFragment.setArguments(bundle);
+        fragments.add(newFragment);
+		fragments.add(Fragment.instantiate(this, ConfigFragment.class.getName()));
+
+        mAdapter.notifyDataSetChanged();
+    }
+
 
 }
