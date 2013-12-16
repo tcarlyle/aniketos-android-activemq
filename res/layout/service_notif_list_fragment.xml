@@ -6,26 +6,7 @@
 
          android:id="@+id/service_notif_list_fragment" 
          android:weightSum="1.0">
-<!--          android:name="org.example.mqtt.ServiceSpecifNotListFragment"-->         
-<!--          <LinearLayout 
-    android:id="@+id/LinearLayout02" 
-    android:layout_height="wrap_content" 
-    android:layout_width="fill_parent" 
-    android:layout_alignParentTop="true">
-    <Button 
-        android:id="@+id/editServiceButton" 
-        android:layout_width="wrap_content" 
-        android:layout_height="wrap_content" 
-        android:layout_weight="1" android:text="Edit">
-    </Button>
-    <Button 
-        android:id="@+id/deleteServiceButton" 
-        android:layout_width="wrap_content" 
-        android:layout_height="wrap_content"
-        android:layout_weight="1" 
-        android:text="Delete">
-    </Button>
-</LinearLayout>-->
+
 
     <TextView
         android:id="@+id/serviceName"
@@ -50,6 +31,7 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:layout_alignParentBottom="true"
+    android:background="@android:color/transparent"
     style="@android:style/ButtonBar">
     
     
