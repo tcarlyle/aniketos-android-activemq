@@ -3,7 +3,6 @@ package org.example.mqtt;
 import java.util.List;
 import java.util.Vector;
 
-import org.example.mqtt.AddServiceDialogFragment.AddServiceDialogFragmentListener;
 import org.example.mqtt.MQTTSubscriberService.IncomingHandler;
 import org.example.mqtt.model.NotifService;
 
@@ -31,7 +30,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 
-public class MainActivity extends FragmentActivity implements TabListener, AddServiceDialogFragmentListener
+public class MainActivity extends FragmentActivity implements TabListener, IServiceChangeListener
 , OnClickListener{
 
 	private final String TAG = "MQTT main activity";
@@ -229,10 +228,14 @@ public class MainActivity extends FragmentActivity implements TabListener, AddSe
 
 	// method called when a NotifService has been added by the dialog gragment
 	@Override
-	public void notifyAddedService() {
+	public void notifyServiceListChanged() {
 		ServicesListFragment frag = (ServicesListFragment) mAdapter.findFragmentByPosition(1); // TODO: change this 1 for a static number
 		if(null != frag){
 			frag.notifyServiceListChange();
+		}
+		StatusListFragment frag2 = (StatusListFragment) mAdapter.findFragmentByPosition(0); // TODO: change this 1 for a static number
+		if(null != frag2){
+			frag2.notifyServiceChanged();
 		}
 		
 	   

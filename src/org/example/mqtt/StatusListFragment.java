@@ -1,10 +1,13 @@
 package org.example.mqtt;
 
+import java.util.ArrayList;
+
 import org.example.mqtt.data.NotificationContentProvider;
 import org.example.mqtt.data.NotificationCursorAdapter;
 import org.example.mqtt.data.NotificationData;
 import org.example.mqtt.model.NotifService;
 
+import android.app.Activity;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
@@ -43,8 +46,30 @@ public class StatusListFragment extends ListFragment implements
 				NotificationData.SERVER_TIME, NotificationData.SERVICE_ID, NotificationData.THREAT_ID,
 				NotificationData.THRESHOLD, NotificationData.VALUE,NotificationData.SERVICE_FULL_URI};
 
+		// creating a selection clause to filter the notifications
+		// in order to show only the ones of active subscriptions
+		Activity parent = getActivity();
+		MqttApplication app = (MqttApplication) parent.getApplication();
+		ArrayList<NotifService> servList = app.getServiceList();
+		String selection = null;
+		String args[] = null;
+		if(servList.isEmpty() == false){
+			selection = NotificationData.SERVICE_ID + " IN (";
+			args = new String[servList.size()];
+			int i=0;
+			for(NotifService n : servList){
+				args[i] = n.getServiceURI();
+				i++;
+				selection+="?,";
+			}
+			selection = selection.substring(0, selection.length()-1) + ")"; // replace last , with )
+			Log.d(TAG, "selection clause " + selection);
+		}
+
+		
+		
         CursorLoader cursorLoader = new CursorLoader(getActivity(),
-        		NotificationContentProvider.CONTENT_URI, projection, null, null,NotificationData.SERVER_TIME + " DESC");
+        		NotificationContentProvider.CONTENT_URI, projection, selection, args,NotificationData.SERVER_TIME + " DESC");
         return cursorLoader;
 
 	}
@@ -54,6 +79,9 @@ public class StatusListFragment extends ListFragment implements
 		adapter.swapCursor(cursor);
 		
 	}
+	
+
+	
 
 	@Override
 	public void onLoaderReset(Loader<Cursor> arg0) {
@@ -70,5 +98,12 @@ public class StatusListFragment extends ListFragment implements
 		  MainActivity m = (MainActivity) getActivity();
 		  m.showServiceSpecificNotifications(serviceUri);
 	  }
-
+	  
+		// as the services are part of the loader selection clause (and not the projection, see my onCreateLoader)
+	  // I need to restart the loader if there is a new service is added or removed.
+	  
+	  
+		public void notifyServiceChanged() {
+			getLoaderManager().restartLoader(0, null, this);	
+		}
 }

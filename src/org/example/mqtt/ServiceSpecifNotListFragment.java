@@ -29,7 +29,8 @@ public class ServiceSpecifNotListFragment extends ListFragment implements
 	String serviceUri;
 	String servName;
 	TextView serviceName = null;
-	AlertDialog alert;
+	AlertDialog alertDeleteService;
+	AlertDialog alertClearDb;
 	
 	private NotificationCursorAdapter adapter;
 	@Override
@@ -52,11 +53,7 @@ public class ServiceSpecifNotListFragment extends ListFragment implements
 	               public void onClick(DialogInterface dialog, int id) {
 	            	   Log.d(TAG, "deleting service ");
 	                    dialog.dismiss();
-	                    MainActivity m = (MainActivity)getActivity();
-	                    MqttApplication app = (MqttApplication) m.getApplication();
-	                    app.deleteService(servName);
-	                    m.notifyAddedService();
-	                    m.onBackPressed();
+	                    alertClearDb.show();
 	               }
 	           })
 	           .setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -64,8 +61,36 @@ public class ServiceSpecifNotListFragment extends ListFragment implements
 	                    dialog.cancel();
 	               }
 	           });
-		    alert = builder.create();
+		    alertDeleteService = builder.create();
 		    
+		    AlertDialog.Builder builder2 = new AlertDialog.Builder(getActivity());
+		    builder2.setCancelable(false)
+	           .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+	               public void onClick(DialogInterface dialog, int id) {
+	            	   Log.d(TAG, "deleting notifications ");
+	                    dialog.dismiss();
+	                    MainActivity m = (MainActivity)getActivity();
+	                    MqttApplication app = (MqttApplication) m.getApplication();
+	                    app.deleteService(servName,true);
+	                    m.notifyServiceListChanged(); // TODO: change those by callbacks to the activity (not done yet because I need 
+	                    // to think a nice way to do the back)
+	                    m.onBackPressed();
+	               }
+	           })
+	           .setNegativeButton("No", new DialogInterface.OnClickListener() {
+	               public void onClick(DialogInterface dialog, int id) {
+	                    dialog.dismiss();
+	                    MainActivity m = (MainActivity)getActivity();
+	                    MqttApplication app = (MqttApplication) m.getApplication();
+	                    app.deleteService(servName,false);
+	                    m.notifyServiceListChanged(); // TODO: change those by callbacks to the activity (not done yet because I need 
+	                    // to think a nice way to do the back)
+	                    m.onBackPressed();
+	               }
+	           });
+		    
+		    alertClearDb = builder2.create();
+		    alertClearDb.setMessage("Do you want to delete the stored notifications?");
 	/*	    Bundle arg = this.getArguments();
 		    serviceUri = arg.getString(MqttApplication.SERVICE_URI_BUNDLE_TAG);
 		    // TODO move the serviceURI null check here*/
@@ -82,11 +107,11 @@ public class ServiceSpecifNotListFragment extends ListFragment implements
 		    serviceName.setText(servName); // the name is set in the onCreateLoader
 	    	
 
-		   alert.setMessage("Delete " + servName + " ?");
+		    alertDeleteService.setMessage("Delete " + servName + " ?");
 		   deleteServiceButton = (Button) rootView.findViewById(R.id.delServiceButton);
 		   deleteServiceButton.setOnClickListener(new View.OnClickListener() {
 	             public void onClick(View v) {
-	                 alert.show();
+	            	 alertDeleteService.show();
 	             }
 	         });
 

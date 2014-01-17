@@ -3,6 +3,8 @@ package org.example.mqtt;
 import java.util.ArrayList;
 import java.util.Map;
 
+import org.example.mqtt.data.NotificationContentProvider;
+import org.example.mqtt.data.NotificationData;
 import org.example.mqtt.model.NotifService;
 
 import android.app.Application;
@@ -11,6 +13,8 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 public class MqttApplication extends Application {
+	
+	private static final String TAG = "MQTTApplication";
 
 	public static final int STATUS_LIST_LOADER = 0x01;
 	public static final int SERVICE_SPECIFIC_LIST_LOADER = 0x02;
@@ -82,10 +86,21 @@ public class MqttApplication extends Application {
 	}
 
 
-	public boolean deleteService(String serviceName){
+	public boolean deleteService(String serviceName, boolean clearNotif){
 		
 		for(NotifService serv : serviceList) {
 		    if(serv.getServiceName() != null && serv.getServiceName().equals(serviceName)) {
+		    	
+		    	if(clearNotif){
+			    	// clear the notifications
+			    	String mSelectionClause = NotificationData.SERVICE_ID + " LIKE ?";
+			    	String[] mSelectionArgs = {serv.getServiceURI()};
+			    	int mRowsDeleted = getContentResolver().delete(NotificationContentProvider.CONTENT_URI, 
+			    	    mSelectionClause, mSelectionArgs);
+			    	Log.d(TAG, mRowsDeleted + " notifications from " + serviceName + " deleted from DB");
+		    	}
+		    	
+		    	// remove the service from the shared preferences
 		    	SharedPreferences keyValues = getSharedPreferences(MqttApplication.sharedPrefName, Context.MODE_PRIVATE);
 		        SharedPreferences.Editor keyValuesEditor = keyValues.edit();
 		        keyValuesEditor.remove(serv.getServiceURI());

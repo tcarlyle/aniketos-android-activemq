@@ -29,24 +29,9 @@ public class AddServiceDialogFragment extends DialogFragment implements OnClickL
 	Button saveButton;
 	Button cancelButton;
 	
-	AddServiceDialogFragmentListener activityCallback;
+	IServiceChangeListener activityCallback;
 	
 	
-	// interface that the activity must implement in order to get a notification
-	// when the service is added to the shared preferences
-    public interface AddServiceDialogFragmentListener {
-        void notifyAddedService();
-    }
-	
-	// pass as in put a serviceList if you want to update it
-/*	public static AddServiceDialogFragment newInstance(ArrayList<NotifService> serviceList){
-		AddServiceDialogFragment dialogFragment = new AddServiceDialogFragment();
-	    Bundle bundle = new Bundle();
-	    bundle.putSerializable("list", serviceList);
-	    dialogFragment.setArguments(bundle);
-
-	    return dialogFragment;
-	}*/
     
     // override the regular onAttach to set the callback to the activity
     @Override
@@ -56,7 +41,7 @@ public class AddServiceDialogFragment extends DialogFragment implements OnClickL
         // This makes sure that the container activity has implemented
         // the callback interface. If not, it throws an exception
         try {
-        	activityCallback = (AddServiceDialogFragmentListener) activity;
+        	activityCallback = (IServiceChangeListener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement OnHeadlineSelectedListener");
@@ -68,7 +53,6 @@ public class AddServiceDialogFragment extends DialogFragment implements OnClickL
             Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.add_service_dialog_frag, container);
         
-        //servUriEditText.setText("pub.http://www.eclipse.org/paho/.ThreatLevelChange.Decreasing reputation", android.widget.TextView.BufferType.EDITABLE);
         nameEditText = (EditText) view.findViewById(R.id.txt_name);
         servUriEditText = (EditText) view.findViewById(R.id.txt_service_uri);
         getDialog().setTitle("Add Service");
@@ -105,7 +89,7 @@ public class AddServiceDialogFragment extends DialogFragment implements OnClickL
 	                	toast("Error: service URI already registered");
 	                    break;
 	                case MqttApplication.ADD_SERVICE_OK:
-	                	activityCallback.notifyAddedService();
+	                	activityCallback.notifyServiceListChanged();
 	                    break;
         		}
 
