@@ -48,7 +48,11 @@ public class MainActivity extends FragmentActivity implements TabListener, IServ
     
     boolean isBound = false;
     
+    boolean is_phone;
+    
     List<Fragment> fragments;
+    
+    private Button showAllServicesButton = null; // only available on tablet
     
     // connect == true
     // disconnect == false
@@ -138,58 +142,79 @@ public class MainActivity extends FragmentActivity implements TabListener, IServ
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		// Initilization
-		viewPager = (ViewPager) findViewById(R.id.pager);
-		actionBar = getActionBar();
+		is_phone=  getResources().getBoolean(R.bool.is_phone);
 		
-		//List<Fragment> 
+		if(is_phone){
 		
-		// WATCH OUT! unfortunatelly dealing with fragments on a page adapter is a bit
-		// of a mess and I cant get a single reference to them and therefore must
-		// identified base on the order in which they are added to this vector
-		// therefore do not change this order before checking the code!
-		fragments = new Vector<Fragment>();
-        fragments.add(Fragment.instantiate(this, StatusListFragment.class.getName()));
-        fragments.add(Fragment.instantiate(this, ServicesListFragment.class.getName()));
-        fragments.add(Fragment.instantiate(this, ConfigFragment.class.getName()));
+			// Phone Tabbed Initilization
+			viewPager = (ViewPager) findViewById(R.id.pager);
+			actionBar = getActionBar();
+			
+			//List<Fragment> 
+			
+			// WATCH OUT! unfortunatelly dealing with fragments on a page adapter is a bit
+			// of a mess and I cant get a single reference to them and therefore must
+			// identified base on the order in which they are added to this vector
+			// therefore do not change this order before checking the code!
+			fragments = new Vector<Fragment>();
+	        fragments.add(Fragment.instantiate(this, StatusListFragment.class.getName()));
+	        fragments.add(Fragment.instantiate(this, ServicesListFragment.class.getName()));
+	        fragments.add(Fragment.instantiate(this, ConfigFragment.class.getName()));
+			
+			mAdapter = new TabsPagerAdapter(getSupportFragmentManager(),fragments);
+	
+			viewPager.setAdapter(mAdapter);
+			actionBar.setHomeButtonEnabled(false);
+			actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);		
+	
+			// Adding Tabs
+			for (String tab_name : MqttApplication.tabs) {
+				actionBar.addTab(actionBar.newTab().setText(tab_name)
+						.setTabListener(this));
+			}
+	
+			/**
+			 * on swiping the viewpager make respective tab selected
+			 * */
+			viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+	
+				@Override
+				public void onPageSelected(int position) {
+					// on changing the page
+					// make respected tab selected
+					actionBar.setSelectedNavigationItem(position);
+				}
+	
+				@Override
+				public void onPageScrolled(int arg0, float arg1, int arg2) {
+				}
+	
+				@Override
+				public void onPageScrollStateChanged(int arg0) {
+				}
+			});
+			
+	    	// lock the screen in portrait mode
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		}//end of phone OnCreate
+		else{
+			//tablet onCreate
+			
+			StatusListFragment fragment = (StatusListFragment) Fragment.instantiate(this, StatusListFragment.class.getName());
+	    	android.support.v4.app.FragmentTransaction fft = getSupportFragmentManager().beginTransaction();
+			fft.add(R.id.notifFragment_container, fragment, "all_status_frag");
+			fft.commit();
+			
+			showAllServicesButton = (Button) findViewById(R.id.showAllServicesButton);
+			showAllServicesButton.setOnClickListener(this);
+			
+			
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+		}//end of tablet onCreate
 		
-		mAdapter = new TabsPagerAdapter(getSupportFragmentManager(),fragments);
-
-		viewPager.setAdapter(mAdapter);
-		actionBar.setHomeButtonEnabled(false);
-		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);		
-
-		// Adding Tabs
-		for (String tab_name : MqttApplication.tabs) {
-			actionBar.addTab(actionBar.newTab().setText(tab_name)
-					.setTabListener(this));
-		}
 		Log.d(TAG, "going to bind to the service.");
 		doBindService();
 		
-		/**
-		 * on swiping the viewpager make respective tab selected
-		 * */
-		viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-
-			@Override
-			public void onPageSelected(int position) {
-				// on changing the page
-				// make respected tab selected
-				actionBar.setSelectedNavigationItem(position);
-			}
-
-			@Override
-			public void onPageScrolled(int arg0, float arg1, int arg2) {
-			}
-
-			@Override
-			public void onPageScrollStateChanged(int arg0) {
-			}
-		});
-		
-    	// lock the screen in portrait mode
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		
 	}
     
@@ -226,18 +251,29 @@ public class MainActivity extends FragmentActivity implements TabListener, IServ
 	}
 
 
-	// method called when a NotifService has been added by the dialog gragment
+	// method called when a NotifService has been added by the dialog fragment
 	@Override
 	public void notifyServiceListChanged() {
-		ServicesListFragment frag = (ServicesListFragment) mAdapter.findFragmentByPosition(1); // TODO: change this 1 for a static number
-		if(null != frag){
-			frag.notifyServiceListChange();
+		if(is_phone){
+			ServicesListFragment frag = (ServicesListFragment) mAdapter.findFragmentByPosition(1); // TODO: change this 1 for a static number
+			if(null != frag){
+				frag.notifyServiceListChange();
+			}
+			StatusListFragment frag2 = (StatusListFragment) mAdapter.findFragmentByPosition(0); // TODO: change this 0 for a static number
+			if(null != frag2){
+				frag2.notifyServiceChanged();
+			}
 		}
-		StatusListFragment frag2 = (StatusListFragment) mAdapter.findFragmentByPosition(0); // TODO: change this 1 for a static number
-		if(null != frag2){
-			frag2.notifyServiceChanged();
+		else{
+			ServicesListFragment frag = (ServicesListFragment)  getSupportFragmentManager().findFragmentById(R.id.servicelist_fragment);
+			if(null != frag){
+				frag.notifyServiceListChange();
+			}
+			StatusListFragment frag2 = (StatusListFragment) getSupportFragmentManager().findFragmentByTag("all_status_frag");
+			if(null != frag2){
+				frag2.notifyServiceChanged();
+			}
 		}
-		
 	   
 	}
 
@@ -251,39 +287,74 @@ public class MainActivity extends FragmentActivity implements TabListener, IServ
             AddServiceDialogFragment frag = new AddServiceDialogFragment();
             frag.show(fm, AddServiceDialogFragment.class.getName());
             break;
-		}
-		
+
+	    case R.id.showAllServicesButton:
+	        // check if fragment is already there
+	    	StatusListFragment fragment = (StatusListFragment)  getSupportFragmentManager().findFragmentByTag("all_status_frag");
+	        if ( (null == fragment) || (false == fragment.isInLayout()) ) {
+	        	// as the fragment is not there, I'll reintroduce it
+	        	if(null == fragment){
+	        		fragment = (StatusListFragment) Fragment.instantiate(this, StatusListFragment.class.getName());
+	        		Log.d(TAG, "all notifications fragment is recreated");
+	        	}
+				android.support.v4.app.FragmentTransaction fft = getSupportFragmentManager().beginTransaction();
+				fft.replace(R.id.notifFragment_container, fragment, "all_status_frag");
+				fft.commit();
+	        } 
+	    	break;
+
+		}	
 	}
 	
 	
-	
+	// DRAFT FUCTION NOT YET LINKED TO THE SOFTWARE (the phone part), in fact I should probably change 
+	// the service specific list it to an activity itself
 	// this function can be called by fragments to invoke the creation and
 	// display of a fragment with the service specific notifications
-	public void showServiceSpecificNotifications(String serviceURI){
-		// Create new fragment and transaction
-		Fragment newFragment = Fragment.instantiate(this, ServiceSpecifNotListFragment.class.getName());
-		Bundle bundle = new Bundle();
-		bundle.putString(MqttApplication.SERVICE_URI_BUNDLE_TAG, serviceURI);
-		newFragment.setArguments(bundle);
-		
-		
-		
-		android.support.v4.app.FragmentTransaction fft = getSupportFragmentManager().beginTransaction();
-
-		// Replace whatever is in the fragment_container view with this fragment,
-		// and add the transaction to the back stack
-
-		// test 1
-		//Fragment oldServiceFragment = mAdapter.findFragmentByPosition(1);
-		//fft.replace(oldServiceFragment., newFragment, "specific_service_notif_list");
-
-		// test 2
-		//fft.add(R.id.service_notif_list_fragment, newFragment);
-		//fft.show(newFragment);
-		//fft.addToBackStack(null);
-
-		// Commit the transaction
-		fft.commit();
+	public void showServiceSpecificNotifications(String serviceURI, String serviceName){
+		if(null == serviceName || serviceName.isEmpty()){
+			
+			MqttApplication app = (MqttApplication) getApplication();
+			serviceName = app.getServiceNameFromURI(serviceURI);
+		}
+		if(is_phone){
+			// Create new fragment and transaction
+			Fragment newFragment = Fragment.instantiate(this, ServiceSpecifNotListFragment.class.getName());
+			Bundle bundle = new Bundle();
+			bundle.putString(MqttApplication.SERVICE_URI_BUNDLE_TAG, serviceURI);
+			bundle.putString(MqttApplication.SERVICE_NAME_BUNDLE_TAG, serviceName);
+			newFragment.setArguments(bundle);
+			
+			
+			
+			android.support.v4.app.FragmentTransaction fft = getSupportFragmentManager().beginTransaction();
+	
+			// Replace whatever is in the fragment_container view with this fragment,
+			// and add the transaction to the back stack
+	
+			// test 1
+			//Fragment oldServiceFragment = mAdapter.findFragmentByPosition(1);
+			//fft.replace(oldServiceFragment., newFragment, "specific_service_notif_list");
+	
+			// test 2
+			//fft.add(R.id.service_notif_list_fragment, newFragment);
+			//fft.show(newFragment);
+			//fft.addToBackStack(null);
+	
+			// Commit the transaction
+			fft.commit();
+		}
+		else{
+			Fragment newFragment = Fragment.instantiate(this, ServiceSpecifNotListFragment.class.getName());
+			Bundle bundle = new Bundle();
+			bundle.putString(MqttApplication.SERVICE_URI_BUNDLE_TAG, serviceURI);
+			bundle.putString(MqttApplication.SERVICE_NAME_BUNDLE_TAG, serviceName);
+			newFragment.setArguments(bundle);
+			
+			android.support.v4.app.FragmentTransaction fft = getSupportFragmentManager().beginTransaction();
+			fft.replace(R.id.notifFragment_container, newFragment, "specific_service_notif_list");
+			fft.commit();
+		}
 		
 
 		Log.d(TAG, "show service finished to be called");
@@ -293,16 +364,21 @@ public class MainActivity extends FragmentActivity implements TabListener, IServ
 	// This the important bit to make sure the back button works when you're nesting fragments. Very hacky, all it takes is some Google engineer to change that ViewPager view tag to break this in a future Android update.
 	@Override
 	public void onBackPressed() {
-	    Fragment fragment = (Fragment) getSupportFragmentManager().findFragmentByTag("android:switcher:" + R.id.pager + ":"+viewPager.getCurrentItem());
-	    if (fragment != null) // could be null if not instantiated yet
-	    {
-	        if (fragment.getView() != null) {
-	            // Pop the backstack on the ChildManager if there is any. If not, close this activity as normal.
-	            if (!fragment.getChildFragmentManager().popBackStackImmediate()) {
-	                finish();
-	            }
-	        }
-	    }
+		if(is_phone){
+		    Fragment fragment = (Fragment) getSupportFragmentManager().findFragmentByTag("android:switcher:" + R.id.pager + ":"+viewPager.getCurrentItem());
+		    if (fragment != null) // could be null if not instantiated yet
+		    {
+		        if (fragment.getView() != null) {
+		            // Pop the backstack on the ChildManager if there is any. If not, close this activity as normal.
+		            if (!fragment.getChildFragmentManager().popBackStackImmediate()) {
+		                finish();
+		            }
+		        }
+		    }
+		}
+		else{
+			super.onBackPressed();
+		}
 	}
 	
 

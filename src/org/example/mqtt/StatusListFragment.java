@@ -93,10 +93,10 @@ public class StatusListFragment extends ListFragment implements
 	  public void onListItemClick(ListView l, View v, int position, long id) {
 	    // do something with the data
 		  Cursor  cursor = (Cursor) getListAdapter().getItem(position);
-		  String serviceUri = cursor.getString(cursor.getColumnIndex(NotificationData.SERVICE_FULL_URI));
+		  String serviceUri = cursor.getString(cursor.getColumnIndex(NotificationData.SERVICE_ID));
 		  Log.d(TAG, "selected service " + serviceUri);
 		  MainActivity m = (MainActivity) getActivity();
-		  m.showServiceSpecificNotifications(serviceUri);
+		  m.showServiceSpecificNotifications(serviceUri,"");// TODO: fetch and send the service name!!, now is sending an empty string
 	  }
 	  
 		// as the services are part of the loader selection clause (and not the projection, see my onCreateLoader)

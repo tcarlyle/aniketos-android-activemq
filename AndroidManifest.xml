@@ -27,7 +27,7 @@
         <service android:name="org.example.mqtt.MQTTSubscriberService"
                  android:exported="false" />
         
-        <activity
+         <activity
             android:name="org.example.mqtt.MainActivity"
             android:label="@string/app_name" >
             <intent-filter>
