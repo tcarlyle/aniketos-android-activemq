@@ -22,7 +22,7 @@ public class MqttApplication extends Application {
 	public static String SERVICE_URI_BUNDLE_TAG = "uri";
 	
 	public static String sharedPrefName = "subscriptionList"; 
-	public static String address = "tcp://83.212.116.137:1883"; // TODO: possibly add an input for this
+	private String address = "tcp://83.212.116.137:1883"; // TODO: possibly add an input for this
 	
 	private ArrayList<NotifService> serviceList = new ArrayList<NotifService>();
 	
@@ -111,6 +111,16 @@ public class MqttApplication extends Application {
 		return false;
 	}
 
+	
+	
+
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
 
 	public boolean connection = false;
 	

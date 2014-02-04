@@ -49,10 +49,10 @@ public class MQTTSubscriberService extends Service {
 	
 	CallbackConnection  connection = null;
 	
-	static final int MSG_BIND = 0;
-    static final int MSG_CONNECT = 1;
-    static final int MSG_DISCONNECT = 2;
-    static final int MSG_RECONNECT = 3;
+	public static final int MSG_BIND = 0;
+	public static final int MSG_CONNECT = 1;
+	public static final int MSG_DISCONNECT = 2;
+	public static final int MSG_RECONNECT = 3;
 
     /**
      * Command to the service to unregister a client, ot stop receiving callbacks
@@ -120,13 +120,14 @@ public class MQTTSubscriberService extends Service {
 
 	public void connect()
 	{
+		MqttApplication appHandler = (MqttApplication) getApplication();
 		mqtt = new MQTT();
 		mqtt.setKeepAlive((short)2);
 
 		try
 		{
-			mqtt.setHost(MqttApplication.address);
-			Log.d(TAG, "Address set: " + MqttApplication.address);
+			mqtt.setHost(appHandler.getAddress());
+			Log.d(TAG, "Address set: " + appHandler.getAddress());
 		}
 		catch(URISyntaxException urise)
 		{
@@ -163,7 +164,17 @@ public class MQTTSubscriberService extends Service {
 			}
 			public void onFailure(Throwable e) {
 				Log.d(TAG, "on failure connection ");
-				Log.e(TAG, "Exception connecting to " + MqttApplication.address + " - " + e);
+				Log.e(TAG, "Exception connecting "  + e);
+                Message msg = Message.obtain(null,
+                		MainActivity.RECONNECT_TIMEOUT_ON_SERVER);
+                msg.replyTo = mqttServiceMessenger;
+                try {
+					mClient.send(msg);
+				} catch (RemoteException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+
 			}
 		}));
 
@@ -199,23 +210,13 @@ public class MQTTSubscriberService extends Service {
 				connection.unsubscribe(topics, onui(new UnsubscribeCallback()));
 				connection.disconnect(onui(new Callback<Void>(){
 					public void onSuccess(Void value) {
-						// gonna send my handler to activity
-			        	try {
-			        		MqttApplication appHandler = (MqttApplication) getApplication();
-			        		appHandler.setConnection(true);
-			        		
-			                Message msg = Message.obtain(null,
-			                		MainActivity.MSG_DISCONNECTED);
-			                msg.replyTo = mqttServiceMessenger;
-			                mClient.send(msg);
-
-			            } catch (RemoteException e) {
-			            	Log.e(TAG, "exception sending message to service - " + e);
-			            }
+						// no need to flag to the activity as
+						// the listener disconnect will do it
+			           Log.e(TAG, "disconnected gracefully" );
 
 					}
 					public void onFailure(Throwable e) {
-						Log.e(TAG, "Exception disconnecting from " + MqttApplication.address + " - " + e);
+						Log.e(TAG, "Exception disconnecting " + e);
 					}
 				}));
 			}
@@ -253,6 +254,8 @@ public class MQTTSubscriberService extends Service {
 				
 		public void onFailure(Throwable e) {
 			connection.suspend();// perhaps change for disconnect
+    		MqttApplication appHandler = (MqttApplication) getApplication();
+    		appHandler.setConnection(false);
 			//connectButton.setEnabled(true);
 			Log.e(TAG, "Exception when subscribing: " + e);
 		}
@@ -281,9 +284,23 @@ public class MQTTSubscriberService extends Service {
 	
 	private class MessageListener implements Listener {
 
+		// apparently this is the function that sense a disconnection first
 	    public void onDisconnected() {
 	    	Log.d(TAG, "got disconnected");
 	    	//connectButton.setEnabled(true);
+			connection.suspend();// perhaps change for disconnect
+    		MqttApplication appHandler = (MqttApplication) getApplication();
+    		appHandler.setConnection(false);
+            Message msg = Message.obtain(null,
+            		MainActivity.MSG_DISCONNECTED);
+            msg.replyTo = mqttServiceMessenger;
+            try {
+				mClient.send(msg);
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
 	    	
 	    }
 	    public void onConnected() {

@@ -15,6 +15,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -29,6 +31,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
 public class MainActivity extends FragmentActivity implements TabListener, IServiceChangeListener
 , OnClickListener{
@@ -43,6 +47,7 @@ public class MainActivity extends FragmentActivity implements TabListener, IServ
     static final int MSG_CONNECTED = 1;
     static final int MSG_DISCONNECTED = 2;
     static final int MSG_NEW_MESSAGE = 3;
+    static final int RECONNECT_TIMEOUT_ON_SERVER = 4; // the server does not let one to reconnect too fast
     
     private Messenger mService = null;// handletToService
     
@@ -59,11 +64,33 @@ public class MainActivity extends FragmentActivity implements TabListener, IServ
     private void setConnectButtons(boolean connected){
     	Button connectButton = (Button) findViewById(R.id.connectButton);
     	Button disconnectButton = (Button) findViewById(R.id.disconnectButton);
-    	if(null != connectButton && null != disconnectButton){
+    	EditText serverUrl = (EditText) findViewById(R.id.url_value);
+    	if(null != connectButton && null != disconnectButton && null != serverUrl){
     		connectButton.setEnabled(!connected);
 			disconnectButton.setEnabled(connected);
+			serverUrl.setEnabled(!connected);
     	}
     }
+    
+    private void toastAlert(String text){
+    	Context context = getApplicationContext();
+    	int duration = Toast.LENGTH_LONG;
+
+    	Toast toast = Toast.makeText(context, text, duration);
+    	toast.show();
+    }
+    
+    // TODO: potentially test if it is not behind a captive portal
+    // or if the port is blocked
+	public boolean isOnline() {
+	    ConnectivityManager cm =
+	        (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+	    NetworkInfo netInfo = cm.getActiveNetworkInfo();
+	    if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+	        return true;
+	    }
+	    return false;
+	}
     
     /**
      * Target we publish for clients to send messages to myself.
@@ -86,10 +113,11 @@ public class MainActivity extends FragmentActivity implements TabListener, IServ
                 	// TODO: maybe add a toast
                     break;
                 case MSG_DISCONNECTED:
+                	toastAlert("Disconnected");
                 	setConnectButtons(false);
                     break;
-                case MSG_NEW_MESSAGE:
-                    
+                case RECONNECT_TIMEOUT_ON_SERVER:
+                    toastAlert("The server is still closing the previous connection. Please wait a bit before trying to reconnect");
                     break;
                 default:
                     super.handleMessage(msg);

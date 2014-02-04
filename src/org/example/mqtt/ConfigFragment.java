@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -14,6 +15,7 @@ import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -24,6 +26,7 @@ public class ConfigFragment extends Fragment implements OnClickListener{
 	Button disconnectButton = null;
 	private final String TAG = "Config_fragment";
 
+	EditText address = null;
 	
 	static final int DISCONNECT = 0;
 	static final int CONNECT = 1;
@@ -31,7 +34,8 @@ public class ConfigFragment extends Fragment implements OnClickListener{
     // input is true if connected and false if disconnected
     public void setConnectButtons(boolean connect){
 		connectButton.setEnabled(!connect);
-		disconnectButton.setEnabled(connect);    	
+		disconnectButton.setEnabled(connect);
+		address.setEnabled(!connect);
     }
 
 	
@@ -50,6 +54,7 @@ public class ConfigFragment extends Fragment implements OnClickListener{
 	    	
 	    	
 	    	Activity parent = getActivity();
+			MqttApplication appHandler = (MqttApplication) parent.getApplication();
 	    	
 	    	connectButton = (Button) rootView.findViewById(R.id.connectButton);
 	    	connectButton.setOnClickListener(this);
@@ -57,7 +62,10 @@ public class ConfigFragment extends Fragment implements OnClickListener{
 	    	disconnectButton = (Button) rootView.findViewById(R.id.disconnectButton);
 	    	disconnectButton.setOnClickListener(this);
 	    	
-			MqttApplication appHandler = (MqttApplication) parent.getApplication();
+	    	address = (EditText) rootView.findViewById(R.id.url_value);
+	    	address.setText(appHandler.getAddress());
+	    	
+
 			this.setConnectButtons(appHandler.isConnection());
 	    	
 	    }
@@ -65,6 +73,20 @@ public class ConfigFragment extends Fragment implements OnClickListener{
 		public void onClick(View v) {
 			if(v == connectButton)
 			{	
+				
+				// TODO: move those checks to the connect function!!
+				// check if there is internet connectivity
+				MainActivity activeHandler = (MainActivity) getActivity();
+				if(activeHandler.isOnline()== false){
+			    	Context context = getActivity();
+			    	int duration = Toast.LENGTH_LONG;
+	
+			    	Toast toast = Toast.makeText(context, "please ensure you are connected to the internet", duration);
+			    	toast.show();
+			    	return;
+				}
+				
+				
 				// check if app has been configured, in other words, if some subscriptions have been added
 	        	SharedPreferences keyValues = getActivity().getSharedPreferences(MqttApplication.sharedPrefName, Context.MODE_PRIVATE);
 	        	if (keyValues.getAll().isEmpty()){
@@ -87,6 +109,8 @@ public class ConfigFragment extends Fragment implements OnClickListener{
 		private void connect()
 		{
 			MainActivity activeHandler = (MainActivity) getActivity();
+			MqttApplication appHandler = (MqttApplication) activeHandler.getApplication();
+			appHandler.setAddress(address.getText().toString());
 			activeHandler.sendMessageToMQTTservice(MQTTSubscriberService.MSG_CONNECT);
 		}
 		private void toast(String message)
@@ -101,5 +125,6 @@ public class ConfigFragment extends Fragment implements OnClickListener{
 			activeHandler.sendMessageToMQTTservice(MQTTSubscriberService.MSG_DISCONNECT);
 		}
 	
+
 	
 }
