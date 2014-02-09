@@ -48,6 +48,8 @@ public class MainActivity extends FragmentActivity implements TabListener, IServ
     static final int MSG_DISCONNECTED = 2;
     static final int MSG_NEW_MESSAGE = 3;
     static final int RECONNECT_TIMEOUT_ON_SERVER = 4; // the server does not let one to reconnect too fast
+    static final int SUBSCRIPTION_DONE = 5;
+    static final int UNSUBSCRIPTION_DONE = 6;
     
     private Messenger mService = null;// handletToService
     
@@ -118,6 +120,12 @@ public class MainActivity extends FragmentActivity implements TabListener, IServ
                     break;
                 case RECONNECT_TIMEOUT_ON_SERVER:
                     toastAlert("The server is still closing the previous connection. Please wait a bit before trying to reconnect");
+                    break;
+                case SUBSCRIPTION_DONE:
+                	// TODO: maybe add a toast
+                    break;
+                case UNSUBSCRIPTION_DONE:
+                	// TODO: maybe add a toast
                     break;
                 default:
                     super.handleMessage(msg);
@@ -281,7 +289,26 @@ public class MainActivity extends FragmentActivity implements TabListener, IServ
 
 	// method called when a NotifService has been added by the dialog fragment
 	@Override
-	public void notifyServiceListChanged() {
+	public void notifyServiceListChanged(boolean added, String topic) {
+		MqttApplication app = (MqttApplication) getApplication();
+		if(app.isConnection()){// Ill just un/subscribe immediately if Im connected
+			Message msg;
+			if(added){
+				msg = Message.obtain(null,MQTTSubscriberService.MSG_SUBSCRIBE);
+			}else{
+				msg = Message.obtain(null,MQTTSubscriberService.MSG_UNSUBSCRIBE);
+			}
+			Bundle b = new Bundle();
+			b.putString("topic", topic);
+			msg.setData(b);
+            msg.replyTo = clientMessenger;
+            try{
+            	mService.send(msg);
+            } catch (RemoteException e) {
+            	Log.e(TAG, "exception sending message to service - " + e);
+            }
+		}
+		// refresh the views
 		if(is_phone){
 			ServicesListFragment frag = (ServicesListFragment) mAdapter.findFragmentByPosition(1); // TODO: change this 1 for a static number
 			if(null != frag){

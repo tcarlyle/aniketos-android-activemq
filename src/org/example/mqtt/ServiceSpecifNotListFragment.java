@@ -72,7 +72,7 @@ public class ServiceSpecifNotListFragment extends ListFragment implements
 	                    MainActivity m = (MainActivity)getActivity();
 	                    MqttApplication app = (MqttApplication) m.getApplication();
 	                    app.deleteService(servName,true);
-	                    m.notifyServiceListChanged(); // TODO: change those by callbacks to the activity (not done yet because I need 
+	                    m.notifyServiceListChanged(false,serviceUri); // TODO: change those by callbacks to the activity (not done yet because I need 
 	                    // to think a nice way to do the back)
 	                    m.onBackPressed();
 	               }
@@ -83,7 +83,7 @@ public class ServiceSpecifNotListFragment extends ListFragment implements
 	                    MainActivity m = (MainActivity)getActivity();
 	                    MqttApplication app = (MqttApplication) m.getApplication();
 	                    app.deleteService(servName,false);
-	                    m.notifyServiceListChanged(); // TODO: change those by callbacks to the activity (not done yet because I need 
+	                    m.notifyServiceListChanged(false,serviceUri); // TODO: change those by callbacks to the activity (not done yet because I need 
 	                    // to think a nice way to do the back)
 	                    m.onBackPressed();
 	               }

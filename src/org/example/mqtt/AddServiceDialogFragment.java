@@ -89,7 +89,7 @@ public class AddServiceDialogFragment extends DialogFragment implements OnClickL
 	                	toast("Error: service URI already registered");
 	                    break;
 	                case MqttApplication.ADD_SERVICE_OK:
-	                	activityCallback.notifyServiceListChanged();
+	                	activityCallback.notifyServiceListChanged(true,dest);
 	                    break;
         		}
 

@@ -42,6 +42,7 @@ public class MQTTSubscriberService extends Service {
 
 	private final String TAG = "MQTTSubscriberService";
 	
+	private final String MQTT_ALL_WILDCARD_SUFFIX = ".>";
 
     /** For showing and hiding our notification. */
 	Handler threadHandler;
@@ -53,7 +54,9 @@ public class MQTTSubscriberService extends Service {
 	public static final int MSG_CONNECT = 1;
 	public static final int MSG_DISCONNECT = 2;
 	public static final int MSG_RECONNECT = 3;
-
+	public static final int MSG_SUBSCRIBE = 4;
+	public static final int MSG_UNSUBSCRIBE = 5;
+	
     /**
      * Command to the service to unregister a client, ot stop receiving callbacks
      * from the service.  The Message's replyTo field must be a Messenger of
@@ -91,8 +94,13 @@ public class MQTTSubscriberService extends Service {
                 case MSG_DISCONNECT:
                 	disconnect();
                     break;
-                case MSG_RECONNECT:
-                   
+                case MSG_SUBSCRIBE:
+                   String topic = msg.getData().getString("topic");
+                   if(null != topic) subscribeTopic(topic);
+                    break;
+                case MSG_UNSUBSCRIBE:
+                    String t = msg.getData().getString("topic");
+                    if(null != t) unsubscribeTopic(t);                   
                     break;
                 default:
                     super.handleMessage(msg);
@@ -143,7 +151,20 @@ public class MQTTSubscriberService extends Service {
 				Log.d(TAG, "on success connection");
 				connection.listener(new MessageListener());
 				//toast("Connected");
-				Log.d(TAG, "Connected ");
+				
+        		MqttApplication appHandler = (MqttApplication) getApplication();
+        		appHandler.setConnection(true);
+        		
+                Message msg = Message.obtain(null,
+                		MainActivity.MSG_CONNECTED);
+                msg.replyTo = mqttServiceMessenger;
+                try {
+					mClient.send(msg);
+				} catch (RemoteException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
 				
 				// get topics from shared preferences to subscribe
 				
@@ -153,7 +174,7 @@ public class MQTTSubscriberService extends Service {
 
 		    	int i= 0;
 		    	for (Map.Entry<String, String> entry : initialSubs.entrySet()){
-		    		topics[i] = new Topic(UTF8Buffer.utf8("pub." + entry.getKey() + ".>"), QoS.EXACTLY_ONCE);
+		    		topics[i] = new Topic(UTF8Buffer.utf8("pub." + entry.getKey() + MQTT_ALL_WILDCARD_SUFFIX), QoS.EXACTLY_ONCE);
 		    		Log.d(TAG, "Added topic " + topics[i].toString());
 		    		i++;
 		    	}
@@ -180,6 +201,24 @@ public class MQTTSubscriberService extends Service {
 
 	}
 	
+	private void subscribeTopic (String topic){
+    	Topic[] topics = new Topic[1]; 
+    	topics[0] = new Topic(UTF8Buffer.utf8("pub." + topic + MQTT_ALL_WILDCARD_SUFFIX), QoS.EXACTLY_ONCE);
+					
+		// now trying to subscribe
+    	Log.d(TAG, "calling subscribe to " + topics[0].toString());
+		connection.subscribe(topics,onui (new OnsubscribeCallback()));
+		
+	}
+	
+	private void unsubscribeTopic (String topic){
+    	UTF8Buffer[] topics = new UTF8Buffer[1]; 
+    	topics[0] = new UTF8Buffer("pub." + topic + MQTT_ALL_WILDCARD_SUFFIX);
+    	Log.d(TAG, "calling unsubscribe" + topics[0].toString());
+		connection.unsubscribe(topics, onui(new UnsubscribeCallback()));
+	}
+
+	
 	
 	private void disconnect()
 	{
@@ -200,7 +239,7 @@ public class MQTTSubscriberService extends Service {
 
 		    	int i= 0;
 		    	for (Map.Entry<String, String> entry : initialSubs.entrySet()){
-		    		topics[i] = new UTF8Buffer("pub." + entry.getKey() + ".>");
+		    		topics[i] = new UTF8Buffer("pub." + entry.getKey() + MQTT_ALL_WILDCARD_SUFFIX);
 		    		Log.d(TAG, "Unsubscribed topic" + entry.getKey());
 		    		i++;
 		    	}
@@ -234,21 +273,17 @@ public class MQTTSubscriberService extends Service {
 	private class OnsubscribeCallback  implements Callback <byte[]> {
 		public void onSuccess(byte[] subscription) {
 			
-			Log.d(TAG, "subscribed");
-			// gonna send my handler to activity
-        	try {
-        		
-        		MqttApplication appHandler = (MqttApplication) getApplication();
-        		appHandler.setConnection(true);
-        		
-                Message msg = Message.obtain(null,
-                		MainActivity.MSG_CONNECTED);
-                msg.replyTo = mqttServiceMessenger;
-                mClient.send(msg);
+			Log.d(TAG, "subscribed");//TODO complement this log
+            Message msg = Message.obtain(null,
+            		MainActivity.SUBSCRIPTION_DONE);
+            msg.replyTo = mqttServiceMessenger;
+            try {
+				mClient.send(msg);
+			} catch (RemoteException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 
-            } catch (RemoteException e) {
-            	Log.e(TAG, "exception sending message to service - " + e);
-            }
 		}	
 			
 				
@@ -257,7 +292,7 @@ public class MQTTSubscriberService extends Service {
     		MqttApplication appHandler = (MqttApplication) getApplication();
     		appHandler.setConnection(false);
 			//connectButton.setEnabled(true);
-			Log.e(TAG, "Exception when subscribing: " + e);
+			Log.e(TAG, "Exception when subscribing, disconnecting: " + e);
 		}
 
 	}
@@ -267,6 +302,15 @@ public class MQTTSubscriberService extends Service {
 		public void onSuccess(Void subscription) {
 			
 			Log.d(TAG, "Unsubscription worked");
+            Message msg = Message.obtain(null,
+            		MainActivity.UNSUBSCRIPTION_DONE);
+            msg.replyTo = mqttServiceMessenger;
+            try {
+				mClient.send(msg);
+			} catch (RemoteException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 
 		}	
 			

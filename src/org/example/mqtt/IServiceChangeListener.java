@@ -6,5 +6,8 @@ package org.example.mqtt;
 // a more Activity independent format
 
 public interface IServiceChangeListener {
-	void notifyServiceListChanged();
+	
+	//added is true when the topic has been added, and false when it has been removed
+	// topic is the topic that has been changed
+	void notifyServiceListChanged(boolean added, String topic);
 }
